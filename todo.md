@@ -38,3 +38,7 @@
 
 ## Bug Fixes
 - [x] Fix SelectItem empty value error in Search page filters
+
+## Missing Features
+- [x] Create investor profile detail page
+- [x] Add investor profile route to handle /investor/:id

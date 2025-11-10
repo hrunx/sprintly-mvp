@@ -9,6 +9,7 @@ import Dashboard from "./pages/Dashboard";
 import Search from "./pages/Search";
 import Matches from "./pages/Matches";
 import Network from "./pages/Network";
+import InvestorProfile from "./pages/InvestorProfile";
 
 function Router() {
   return (
@@ -17,6 +18,7 @@ function Router() {
       <Route path="/search" component={() => <DashboardLayout><Search /></DashboardLayout>} />
       <Route path="/matches" component={() => <DashboardLayout><Matches /></DashboardLayout>} />
       <Route path="/network" component={() => <DashboardLayout><Network /></DashboardLayout>} />
+      <Route path="/investor/:id" component={() => <DashboardLayout><InvestorProfile /></DashboardLayout>} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>
