@@ -16,16 +16,16 @@ import {
 
 export default function Search() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [sector, setSector] = useState<string>("");
-  const [stage, setStage] = useState<string>("");
-  const [geography, setGeography] = useState<string>("");
+  const [sector, setSector] = useState<string>("all");
+  const [stage, setStage] = useState<string>("all");
+  const [geography, setGeography] = useState<string>("all");
 
   const { data: investors, isLoading } = trpc.entities.list.useQuery({
     type: "investor",
     search: searchTerm || undefined,
-    sector: sector || undefined,
-    stage: stage || undefined,
-    geography: geography || undefined,
+    sector: sector === "all" ? undefined : sector,
+    stage: stage === "all" ? undefined : stage,
+    geography: geography === "all" ? undefined : geography,
     limit: 50,
   });
 
@@ -84,7 +84,7 @@ export default function Search() {
                   <SelectValue placeholder="All sectors" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All sectors</SelectItem>
+                  <SelectItem value="all">All sectors</SelectItem>
                   {sectors.map((s) => (
                     <SelectItem key={s} value={s}>
                       {s}
@@ -101,7 +101,7 @@ export default function Search() {
                   <SelectValue placeholder="All stages" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All stages</SelectItem>
+                  <SelectItem value="all">All stages</SelectItem>
                   {stages.map((s) => (
                     <SelectItem key={s} value={s}>
                       {s}
@@ -118,7 +118,7 @@ export default function Search() {
                   <SelectValue placeholder="All regions" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All regions</SelectItem>
+                  <SelectItem value="all">All regions</SelectItem>
                   {geographies.map((g) => (
                     <SelectItem key={g} value={g}>
                       {g}
@@ -134,9 +134,9 @@ export default function Search() {
               variant="outline"
               onClick={() => {
                 setSearchTerm("");
-                setSector("");
-                setStage("");
-                setGeography("");
+                setSector("all");
+                setStage("all");
+                setGeography("all");
               }}
             >
               Clear Filters

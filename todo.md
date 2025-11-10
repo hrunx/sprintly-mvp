@@ -33,5 +33,8 @@
 ## Phase 5: Testing & Deployment
 - [x] Test all features end-to-end
 - [x] Verify mock data quality
-- [ ] Create checkpoint for deployment
+- [x] Create checkpoint for deployment
 - [ ] Deploy to production
+
+## Bug Fixes
+- [x] Fix SelectItem empty value error in Search page filters
