@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE IF NOT EXISTS matches (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  companyId INT NOT NULL,\n  investorId INT NOT NULL,\n  score INT NOT NULL,\n  sectorScore INT DEFAULT 0,\n  stageScore INT DEFAULT 0,\n  geoScore INT DEFAULT 0,\n  tractionScore INT DEFAULT 0,\n  checkSizeScore INT DEFAULT 0,\n  thesisScore INT DEFAULT 0,\n  graphScore INT DEFAULT 0,\n  explanation TEXT,\n  matchReasons TEXT,\n  concerns TEXT,\n  introPath TEXT,\n  status ENUM('suggested', 'contacted', 'meeting_scheduled', 'passed', 'invested') DEFAULT 'suggested',\n  notes TEXT,\n  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,\n  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user gqQexcNmwh3u9hJ.root --database NXdcrF7CWFAwXcxNJVpVUF --execute CREATE TABLE IF NOT EXISTS matches (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  companyId INT NOT NULL,\n  investorId INT NOT NULL,\n  score INT NOT NULL,\n  sectorScore INT DEFAULT 0,\n  stageScore INT DEFAULT 0,\n  geoScore INT DEFAULT 0,\n  tractionScore INT DEFAULT 0,\n  checkSizeScore INT DEFAULT 0,\n  thesisScore INT DEFAULT 0,\n  graphScore INT DEFAULT 0,\n  explanation TEXT,\n  matchReasons TEXT,\n  concerns TEXT,\n  introPath TEXT,\n  status ENUM('suggested', 'contacted', 'meeting_scheduled', 'passed', 'invested') DEFAULT 'suggested',\n  notes TEXT,\n  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,\n  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL\n);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1710
+}

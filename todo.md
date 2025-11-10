@@ -1,40 +1,26 @@
 # Sprintly MVP - Project TODO
 
-## Phase 1: Database Schema & Mock Data
-- [x] Design database schema for entities, investors, founders, connections
-- [x] Create mock data generator for realistic demo data
-- [x] Seed database with comprehensive mock dataset
+## MAJOR RESTRUCTURE - Company-to-Investor Matchmaking
+- [x] Update database schema to separate companies from founders
+- [x] Add pitch deck storage and analysis fields
+- [x] Add funding requirements and traction metrics to companies
+- [x] Regenerate mock data with realistic companies seeking investment
+- [x] Update matching algorithm to analyze company-investor fit
+- [x] Rebuild company profile pages with pitch deck info
+- [x] Update search to show companies instead of founders
+- [ ] Add pitch deck upload and analysis features
+- [x] Update all UI references from "founders" to "companies"
+- [ ] Add detailed match explanation showing fit criteria
 
-## Phase 2: Backend API & Matching Engine
-- [x] Implement entity management endpoints (CRUD)
-- [x] Build matching algorithm with multi-factor scoring
-- [x] Create search and filter functionality
-- [x] Implement intro path discovery logic
-- [x] Add analytics and KPI tracking endpoints
-
-## Phase 3: Frontend Dashboard & UI
-- [x] Design modern, professional UI theme
-- [x] Build main dashboard with sidebar navigation
-- [x] Create universal search interface
-- [x] Implement smart clusters visualization
-- [x] Build top matches display with explanations
-- [x] Create intro paths visualization
-- [ ] Add list building and export functionality
-- [ ] Implement notes and outcomes tracking
-
-## Phase 4: Polish & Integration
-- [x] Add loading states and error handling
-- [x] Implement responsive design
-- [x] Add data visualizations and charts
-- [x] Create demo mode with sample queries
-- [x] Polish UI/UX details
-- [x] Add tooltips and help text
-
-## Phase 5: Testing & Deployment
-- [x] Test all features end-to-end
-- [x] Verify mock data quality
-- [x] Create checkpoint for deployment
-- [ ] Deploy to production
+## Completed Features
+- [x] Database schema with entities, connections, matches
+- [x] Mock data generator
+- [x] Backend API with matching engine
+- [x] Professional dashboard UI
+- [x] Search page with filters
+- [x] Matches page with recommendations
+- [x] Network visualization
+- [x] Investor profile pages
 
 ## Bug Fixes
 - [x] Fix SelectItem empty value error in Search page filters
@@ -42,3 +28,14 @@
 ## Missing Features
 - [x] Create investor profile detail page
 - [x] Add investor profile route to handle /investor/:id
+
+## No-Code Configuration UI (NEW REQUIREMENT)
+- [x] Create Settings page for matching configuration
+- [x] Add weight sliders for matching signals (sector, stage, traction, etc.)
+- [x] Add filter controls (min revenue, funding range, geography)
+- [x] Add toggle switches for optional matching criteria
+- [x] Save configuration to database per user/workspace
+- [ ] Update backend matching engine to use dynamic weights
+- [x] Add preset configurations (Conservative, Balanced, Aggressive)
+- [ ] Add real-time preview of how settings affect matches
+- [x] Add export/import configuration feature

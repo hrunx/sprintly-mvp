@@ -1,6 +1,10 @@
-import { eq, and, or, like, desc, sql, inArray } from "drizzle-orm";
+import { eq, and, or, like, desc, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, entities, connections, matches, Entity, Connection, Match } from "../drizzle/schema";
+import { 
+  InsertUser, users, 
+  companies, investors, matches, connections,
+  Company, Investor, Match, Connection
+} from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -89,153 +93,188 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-
-
 /**
- * Get all entities with optional filtering
+ * COMPANY QUERIES
  */
-export async function getEntities(filters?: {
-  type?: "founder" | "investor" | "enabler";
+
+export async function getCompanyById(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+
+  const result = await db.select().from(companies).where(eq(companies.id, id)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function listCompanies(criteria: {
+  search?: string;
   sector?: string;
   stage?: string;
   geography?: string;
-  search?: string;
   limit?: number;
 }) {
   const db = await getDb();
   if (!db) return [];
 
-  let query = db.select().from(entities);
-
   const conditions = [];
-  if (filters?.type) conditions.push(eq(entities.type, filters.type));
-  if (filters?.sector) conditions.push(eq(entities.sector, filters.sector));
-  if (filters?.stage) conditions.push(eq(entities.stage, filters.stage));
-  if (filters?.geography) conditions.push(like(entities.geography, `%${filters.geography}%`));
-  if (filters?.search) {
+  
+  if (criteria.search) {
     conditions.push(
       or(
-        like(entities.name, `%${filters.search}%`),
-        like(entities.firm, `%${filters.search}%`),
-        like(entities.bio, `%${filters.search}%`)
+        like(companies.name, `%${criteria.search}%`),
+        like(companies.description, `%${criteria.search}%`)
       )!
     );
   }
+  if (criteria.sector) conditions.push(eq(companies.sector, criteria.sector));
+  if (criteria.stage) conditions.push(eq(companies.stage, criteria.stage));
+  if (criteria.geography) conditions.push(like(companies.geography, `%${criteria.geography}%`));
 
+  const query = db.select().from(companies);
+  
   if (conditions.length > 0) {
-    query = query.where(and(...conditions)!) as any;
+    return query.where(and(...conditions)!).limit(criteria.limit || 50);
   }
-
-  query = query.orderBy(desc(entities.confidence)) as any;
-
-  if (filters?.limit) {
-    query = query.limit(filters.limit) as any;
-  }
-
-  return query;
+  
+  return query.limit(criteria.limit || 50);
 }
 
 /**
- * Get entity by ID
+ * INVESTOR QUERIES
  */
-export async function getEntityById(id: number) {
+
+export async function getInvestorById(id: number) {
   const db = await getDb();
   if (!db) return undefined;
 
-  const result = await db.select().from(entities).where(eq(entities.id, id)).limit(1);
+  const result = await db.select().from(investors).where(eq(investors.id, id)).limit(1);
   return result.length > 0 ? result[0] : undefined;
 }
 
-/**
- * Get connections for an entity
- */
-export async function getEntityConnections(entityId: number) {
+export async function listInvestors(criteria: {
+  search?: string;
+  sector?: string;
+  stage?: string;
+  geography?: string;
+  limit?: number;
+}) {
   const db = await getDb();
   if (!db) return [];
 
-  return db
-    .select()
-    .from(connections)
-    .where(or(eq(connections.sourceId, entityId), eq(connections.targetId, entityId))!)
-    .orderBy(desc(connections.strength));
+  const conditions = [];
+  
+  if (criteria.search) {
+    conditions.push(
+      or(
+        like(investors.name, `%${criteria.search}%`),
+        like(investors.firm, `%${criteria.search}%`),
+        like(investors.bio, `%${criteria.search}%`)
+      )!
+    );
+  }
+  if (criteria.sector) conditions.push(eq(investors.sector, criteria.sector));
+  if (criteria.stage) conditions.push(eq(investors.stage, criteria.stage));
+  if (criteria.geography) conditions.push(like(investors.geography, `%${criteria.geography}%`));
+
+  const query = db.select().from(investors);
+  
+  if (conditions.length > 0) {
+    return query.where(and(...conditions)!).orderBy(desc(investors.confidence)).limit(criteria.limit || 50);
+  }
+  
+  return query.orderBy(desc(investors.confidence)).limit(criteria.limit || 50);
 }
 
 /**
- * Get matches for a founder
+ * MATCH QUERIES
  */
-export async function getFounderMatches(founderId: number, limit = 20) {
+
+export async function getCompanyMatches(companyId: number, limit = 20) {
   const db = await getDb();
   if (!db) return [];
 
   return db
     .select()
     .from(matches)
-    .where(eq(matches.founderId, founderId))
+    .where(eq(matches.companyId, companyId))
     .orderBy(desc(matches.score))
     .limit(limit);
 }
 
-/**
- * Search and match investors for a founder based on criteria
- */
-export async function findMatches(criteria: {
-  sector?: string;
-  stage?: string;
-  geography?: string;
+export async function getMatchById(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+
+  const result = await db.select().from(matches).where(eq(matches.id, id)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function listMatches(criteria: {
+  companyId?: number;
+  investorId?: number;
+  minScore?: number;
   limit?: number;
 }) {
   const db = await getDb();
   if (!db) return [];
 
-  const conditions = [eq(entities.type, "investor")];
+  const conditions = [];
   
-  if (criteria.sector) conditions.push(eq(entities.sector, criteria.sector));
-  if (criteria.stage) conditions.push(eq(entities.stage, criteria.stage));
-  if (criteria.geography) conditions.push(like(entities.geography, `%${criteria.geography}%`));
+  if (criteria.companyId) conditions.push(eq(matches.companyId, criteria.companyId));
+  if (criteria.investorId) conditions.push(eq(matches.investorId, criteria.investorId));
+  if (criteria.minScore) conditions.push(sql`${matches.score} >= ${criteria.minScore}`);
 
-  return db
-    .select()
-    .from(entities)
-    .where(and(...conditions)!)
-    .orderBy(desc(entities.confidence))
-    .limit(criteria.limit || 10);
+  const query = db.select().from(matches);
+  
+  if (conditions.length > 0) {
+    return query.where(and(...conditions)!).orderBy(desc(matches.score)).limit(criteria.limit || 50);
+  }
+  
+  return query.orderBy(desc(matches.score)).limit(criteria.limit || 50);
 }
 
 /**
- * Get analytics/KPI data
+ * Get detailed match with company and investor info
  */
-export async function getAnalytics() {
+export async function getMatchWithDetails(matchId: number) {
   const db = await getDb();
-  if (!db) return null;
+  if (!db) return undefined;
 
-  const [founderCount] = await db
-    .select({ count: sql<number>`count(*)` })
-    .from(entities)
-    .where(eq(entities.type, "founder"));
+  const match = await getMatchById(matchId);
+  if (!match) return undefined;
 
-  const [investorCount] = await db
-    .select({ count: sql<number>`count(*)` })
-    .from(entities)
-    .where(eq(entities.type, "investor"));
-
-  const [connectionCount] = await db
-    .select({ count: sql<number>`count(*)` })
-    .from(connections);
-
-  const [matchCount] = await db
-    .select({ count: sql<number>`count(*)` })
-    .from(matches);
-
-  const [avgMatchScore] = await db
-    .select({ avg: sql<number>`avg(score)` })
-    .from(matches);
+  const company = await getCompanyById(match.companyId);
+  const investor = await getInvestorById(match.investorId);
 
   return {
-    founders: founderCount?.count || 0,
-    investors: investorCount?.count || 0,
-    connections: connectionCount?.count || 0,
-    matches: matchCount?.count || 0,
-    avgMatchScore: Math.round(avgMatchScore?.avg || 0),
+    ...match,
+    company,
+    investor,
+  };
+}
+
+/**
+ * ANALYTICS QUERIES
+ */
+
+export async function getAnalytics() {
+  const db = await getDb();
+  if (!db) return {
+    totalCompanies: 0,
+    totalInvestors: 0,
+    totalMatches: 0,
+    avgMatchScore: 0,
+  };
+
+  const [companiesCount] = await db.select({ count: sql<number>`count(*)` }).from(companies);
+  const [investorsCount] = await db.select({ count: sql<number>`count(*)` }).from(investors);
+  const [matchesCount] = await db.select({ count: sql<number>`count(*)` }).from(matches);
+  const [avgScore] = await db.select({ avg: sql<number>`avg(${matches.score})` }).from(matches);
+
+  return {
+    totalCompanies: Number(companiesCount.count),
+    totalInvestors: Number(investorsCount.count),
+    totalMatches: Number(matchesCount.count),
+    avgMatchScore: Math.round(Number(avgScore.avg) || 0),
   };
 }
 
@@ -248,57 +287,27 @@ export async function getSectorDistribution() {
 
   return db
     .select({
-      sector: entities.sector,
+      sector: companies.sector,
       count: sql<number>`count(*)`,
     })
-    .from(entities)
-    .where(eq(entities.type, "founder"))
-    .groupBy(entities.sector)
+    .from(companies)
+    .groupBy(companies.sector)
     .orderBy(desc(sql`count(*)`));
 }
 
 /**
- * Get intro path between two entities
+ * Get stage distribution
  */
-export async function getIntroPath(sourceId: number, targetId: number) {
+export async function getStageDistribution() {
   const db = await getDb();
   if (!db) return [];
 
-  // Simple path: check if there's a direct connection
-  const directConnection = await db
-    .select()
-    .from(connections)
-    .where(
-      or(
-        and(eq(connections.sourceId, sourceId), eq(connections.targetId, targetId))!,
-        and(eq(connections.sourceId, targetId), eq(connections.targetId, sourceId))!
-      )!
-    )
-    .limit(1);
-
-  if (directConnection.length > 0) {
-    return [sourceId, targetId];
-  }
-
-  // Find mutual connections (2-hop path)
-  const sourceConnections = await db
-    .select({ targetId: connections.targetId })
-    .from(connections)
-    .where(eq(connections.sourceId, sourceId));
-
-  const targetConnections = await db
-    .select({ sourceId: connections.sourceId })
-    .from(connections)
-    .where(eq(connections.targetId, targetId));
-
-  const sourceTargets = sourceConnections.map((c) => c.targetId);
-  const targetSources = targetConnections.map((c) => c.sourceId);
-
-  const mutuals = sourceTargets.filter((id) => targetSources.includes(id));
-
-  if (mutuals.length > 0) {
-    return [sourceId, mutuals[0], targetId];
-  }
-
-  return []; // No path found
+  return db
+    .select({
+      stage: companies.stage,
+      count: sql<number>`count(*)`,
+    })
+    .from(companies)
+    .groupBy(companies.stage)
+    .orderBy(desc(sql`count(*)`));
 }

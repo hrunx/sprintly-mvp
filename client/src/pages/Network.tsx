@@ -37,11 +37,11 @@ export default function Network() {
             ) : (
               <>
                 <div className="text-2xl font-bold">
-                  {analytics?.connections && analytics?.founders && analytics?.investors
+                  {analytics?.totalMatches && analytics?.totalCompanies && analytics?.totalInvestors
                     ? (
-                        (analytics.connections /
-                          ((analytics.founders + analytics.investors) *
-                            (analytics.founders + analytics.investors - 1))) *
+                        (analytics.totalMatches /
+                          ((analytics.totalCompanies + analytics.totalInvestors) *
+                            (analytics.totalCompanies + analytics.totalInvestors - 1))) *
                         100
                       ).toFixed(1)
                     : 0}
@@ -64,9 +64,9 @@ export default function Network() {
             ) : (
               <>
                 <div className="text-2xl font-bold">
-                  {analytics?.connections && analytics?.founders && analytics?.investors
+                  {analytics?.totalMatches && analytics?.totalCompanies && analytics?.totalInvestors
                     ? Math.round(
-                        analytics.connections / (analytics.founders + analytics.investors)
+                        analytics.totalMatches / (analytics.totalCompanies + analytics.totalInvestors)
                       )
                     : 0}
                 </div>
@@ -87,8 +87,8 @@ export default function Network() {
             ) : (
               <>
                 <div className="text-2xl font-bold">
-                  {analytics?.matches && analytics?.founders && analytics?.investors
-                    ? ((analytics.matches / (analytics.founders * analytics.investors)) * 100).toFixed(
+                  {analytics?.totalMatches && analytics?.totalCompanies && analytics?.totalInvestors
+                    ? ((analytics.totalMatches / (analytics.totalCompanies * analytics.totalInvestors)) * 100).toFixed(
                         1
                       )
                     : 0}

@@ -235,25 +235,31 @@ export default function InvestorProfile() {
             </div>
           ) : connections && connections.length > 0 ? (
             <div className="space-y-3">
-              {connections.slice(0, 5).map((connection) => (
-                <div
-                  key={connection.id}
-                  className="flex items-center justify-between p-3 rounded-lg border"
-                >
-                  <div className="flex items-center gap-3">
-                    <Users className="h-4 w-4 text-muted-foreground" />
-                    <div>
-                      <div className="font-medium">
-                        Connection #{connection.sourceId === investorId ? connection.targetId : connection.sourceId}
-                      </div>
-                      <div className="text-sm text-muted-foreground capitalize">
-                        {connection.relationshipType.replace("_", " ")}
+              {connections && connections.length > 0 ? (
+                connections.slice(0, 5).map((connection: any) => (
+                  <div
+                    key={connection.id}
+                    className="flex items-center justify-between p-3 rounded-lg border"
+                  >
+                    <div className="flex items-center gap-3">
+                      <Users className="h-4 w-4 text-muted-foreground" />
+                      <div>
+                        <div className="font-medium">
+                          Connection #{connection.sourceId === investorId ? connection.targetId : connection.sourceId}
+                        </div>
+                        <div className="text-sm text-muted-foreground capitalize">
+                          {connection.relationshipType?.replace("_", " ") || "Unknown"}
+                        </div>
                       </div>
                     </div>
+                    <Badge variant="secondary">{connection.strength || 0}% strength</Badge>
                   </div>
-                  <Badge variant="secondary">{connection.strength}% strength</Badge>
-                </div>
-              ))}
+                ))
+              ) : (
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  No connections available
+                </p>
+              )}
               {connections.length > 5 && (
                 <p className="text-sm text-muted-foreground text-center pt-2">
                   And {connections.length - 5} more connections...

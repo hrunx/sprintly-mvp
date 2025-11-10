@@ -20,8 +20,7 @@ export default function Search() {
   const [stage, setStage] = useState<string>("all");
   const [geography, setGeography] = useState<string>("all");
 
-  const { data: investors, isLoading } = trpc.entities.list.useQuery({
-    type: "investor",
+  const { data: companies, isLoading } = trpc.companies.list.useQuery({
     search: searchTerm || undefined,
     sector: sector === "all" ? undefined : sector,
     stage: stage === "all" ? undefined : stage,
@@ -50,9 +49,9 @@ export default function Search() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Search Investors</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Browse Companies</h1>
         <p className="text-muted-foreground mt-2">
-          Find investors that match your criteria using our AI-powered search
+          Discover companies seeking funding using our AI-powered search
         </p>
       </div>
 
@@ -60,7 +59,7 @@ export default function Search() {
       <Card>
         <CardHeader>
           <CardTitle>Search Criteria</CardTitle>
-          <CardDescription>Filter investors by sector, stage, geography, or search by name</CardDescription>
+          <CardDescription>Filter companies by sector, stage, geography, or search by name</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -149,7 +148,7 @@ export default function Search() {
       <div>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-semibold">
-            {isLoading ? "Searching..." : `${investors?.length || 0} Investors Found`}
+            {isLoading ? "Searching..." : `${companies?.length || 0} Companies Found`}
           </h2>
         </div>
 
@@ -162,19 +161,19 @@ export default function Search() {
                 </CardContent>
               </Card>
             ))
-          ) : investors && investors.length > 0 ? (
-            investors.map((investor) => {
-              const tags = investor.tags ? JSON.parse(investor.tags as string) : [];
+          ) : companies && companies.length > 0 ? (
+            companies.map((company) => {
+              const tags = company.tags ? JSON.parse(company.tags as string) : [];
               return (
-                <Card key={investor.id} className="hover:shadow-lg transition-shadow">
+                <Card key={company.id} className="hover:shadow-lg transition-shadow">
                   <CardContent className="p-6">
                     <div className="flex gap-4">
-                      {/* Avatar */}
+                      {/* Logo */}
                       <div className="flex-shrink-0">
                         <img
-                          src={investor.avatarUrl || ""}
-                          alt={investor.name}
-                          className="w-16 h-16 rounded-full bg-secondary"
+                          src={company.logoUrl || "https://api.dicebear.com/7.x/shapes/svg?seed=" + company.name}
+                          alt={company.name}
+                          className="w-16 h-16 rounded-lg bg-secondary border-2 border-border"
                         />
                       </div>
 
@@ -182,49 +181,48 @@ export default function Search() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-4">
                           <div>
-                            <h3 className="text-lg font-semibold">{investor.name}</h3>
+                            <h3 className="text-lg font-semibold">{company.name}</h3>
                             <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
-                              <span>{investor.title}</span>
-                              {investor.firm && (
+                              <span>{company.sector}</span>
+                              {company.businessModel && (
                                 <>
                                   <span>•</span>
-                                  <Building2 className="h-3 w-3" />
-                                  <span>{investor.firm}</span>
+                                  <span>{company.businessModel}</span>
                                 </>
                               )}
                             </div>
                           </div>
                           <Badge variant="secondary" className="flex-shrink-0">
-                            {investor.confidence}% Match
+                            {company.confidence}% Quality
                           </Badge>
                         </div>
 
                         <p className="text-sm text-muted-foreground mt-3 line-clamp-2">
-                          {investor.bio || investor.thesis}
+                          {company.description}
                         </p>
 
                         <div className="flex flex-wrap gap-4 mt-4 text-sm">
-                          {investor.sector && (
+                          {company.stage && (
                             <div className="flex items-center gap-1.5">
-                              <TrendingUp className="h-4 w-4 text-blue-600" />
-                              <span>{investor.sector}</span>
+                              <Badge variant="outline">{company.stage}</Badge>
                             </div>
                           )}
-                          {investor.stage && (
-                            <div className="flex items-center gap-1.5">
-                              <Badge variant="outline">{investor.stage}</Badge>
-                            </div>
-                          )}
-                          {investor.geography && (
+                          {company.geography && (
                             <div className="flex items-center gap-1.5">
                               <MapPin className="h-4 w-4 text-green-600" />
-                              <span>{investor.geography}</span>
+                              <span>{company.geography}</span>
                             </div>
                           )}
-                          {(investor.checkSizeMin || investor.checkSizeMax) && (
+                          {company.fundingTarget && (
                             <div className="flex items-center gap-1.5">
                               <DollarSign className="h-4 w-4 text-purple-600" />
-                              <span>{formatCheckSize(investor.checkSizeMin, investor.checkSizeMax)}</span>
+                              <span>Seeking ${(company.fundingTarget / 1000000).toFixed(1)}M</span>
+                            </div>
+                          )}
+                          {company.revenue && (
+                            <div className="flex items-center gap-1.5">
+                              <TrendingUp className="h-4 w-4 text-blue-600" />
+                              <span>Revenue ${(company.revenue / 1000000).toFixed(1)}M</span>
                             </div>
                           )}
                         </div>
@@ -241,13 +239,13 @@ export default function Search() {
 
                         <div className="flex gap-2 mt-4">
                           <Button size="sm" asChild>
-                            <a href={`/investor/${investor.id}`}>View Profile</a>
+                            <a href={`/company/${company.id}`}>View Profile</a>
                           </Button>
-                          {investor.linkedinUrl && (
+                          {company.websiteUrl && (
                             <Button size="sm" variant="outline" asChild>
-                              <a href={investor.linkedinUrl} target="_blank" rel="noopener noreferrer">
+                              <a href={company.websiteUrl} target="_blank" rel="noopener noreferrer">
                                 <ExternalLink className="h-3 w-3 mr-1" />
-                                LinkedIn
+                                Website
                               </a>
                             </Button>
                           )}
@@ -262,7 +260,7 @@ export default function Search() {
             <Card>
               <CardContent className="p-12 text-center">
                 <SearchIcon className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <h3 className="text-lg font-semibold mb-2">No investors found</h3>
+                <h3 className="text-lg font-semibold mb-2">No companies found</h3>
                 <p className="text-muted-foreground">
                   Try adjusting your search criteria or clearing filters
                 </p>

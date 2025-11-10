@@ -8,34 +8,34 @@ export default function Dashboard() {
 
   const stats = [
     {
-      title: "Total Founders",
-      value: analytics?.founders || 0,
-      icon: Users,
-      description: "Active founder profiles",
+      title: "Total Companies",
+      value: analytics?.totalCompanies || 0,
+      icon: Building2,
+      description: "Companies seeking funding",
       color: "text-blue-600",
       bgColor: "bg-blue-50 dark:bg-blue-950",
     },
     {
       title: "Total Investors",
-      value: analytics?.investors || 0,
-      icon: Building2,
-      description: "Verified investor profiles",
+      value: analytics?.totalInvestors || 0,
+      icon: Users,
+      description: "Active investors",
       color: "text-purple-600",
       bgColor: "bg-purple-50 dark:bg-purple-950",
     },
     {
-      title: "Network Connections",
-      value: analytics?.connections || 0,
-      icon: Network,
-      description: "Relationship mappings",
+      title: "Smart Matches",
+      value: analytics?.totalMatches || 0,
+      icon: Target,
+      description: "AI-generated matches",
       color: "text-green-600",
       bgColor: "bg-green-50 dark:bg-green-950",
     },
     {
-      title: "Smart Matches",
-      value: analytics?.matches || 0,
-      icon: Target,
-      description: "AI-generated matches",
+      title: "Avg Match Score",
+      value: `${analytics?.avgMatchScore || 0}%`,
+      icon: TrendingUp,
+      description: "Match quality",
       color: "text-orange-600",
       bgColor: "bg-orange-50 dark:bg-orange-950",
     },
@@ -125,9 +125,9 @@ export default function Dashboard() {
               href="/search"
               className="block p-4 rounded-lg border hover:border-primary hover:bg-accent/50 transition-all cursor-pointer"
             >
-              <div className="font-semibold">Search Investors</div>
+              <div className="font-semibold">Browse Companies</div>
               <div className="text-sm text-muted-foreground">
-                Find investors matching your criteria
+                Discover companies seeking funding
               </div>
             </a>
             <a
