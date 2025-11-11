@@ -39,3 +39,7 @@
 - [x] Add preset configurations (Conservative, Balanced, Aggressive)
 - [ ] Add real-time preview of how settings affect matches
 - [x] Add export/import configuration feature
+
+## Bug Fixes (Current)
+- [x] Fix 404 error for /company/:id route
+- [x] Create company profile detail page
