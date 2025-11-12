@@ -43,3 +43,18 @@
 ## Bug Fixes (Current)
 - [x] Fix 404 error for /company/:id route
 - [x] Create company profile detail page
+
+## Documentation
+- [x] Create comprehensive README.md with architecture and features
+- [x] Add screenshots of all key pages
+- [x] Document setup and deployment instructions
+
+## Screenshots Update
+- [x] Capture screenshot of Dashboard page
+- [x] Capture screenshot of Search/Browse Companies page
+- [x] Capture screenshot of Matches page
+- [x] Capture screenshot of Network page
+- [x] Capture screenshot of Settings page (all tabs)
+- [x] Capture screenshot of Company Profile page
+- [x] Capture screenshot of Investor Profile page
+- [x] Update README with all new screenshots
