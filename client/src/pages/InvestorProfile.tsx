@@ -9,13 +9,11 @@ import {
   MapPin,
   TrendingUp,
   DollarSign,
-  ExternalLink,
   Mail,
   Globe,
   Linkedin,
   ArrowLeft,
   Network,
-  Users,
 } from "lucide-react";
 import { useLocation } from "wouter";
 
@@ -24,10 +22,7 @@ export default function InvestorProfile() {
   const [, setLocation] = useLocation();
   const investorId = params?.id ? parseInt(params.id) : 0;
 
-  const { data: investor, isLoading } = trpc.entities.byId.useQuery({ id: investorId });
-  const { data: connections, isLoading: connectionsLoading } = trpc.entities.connections.useQuery({
-    entityId: investorId,
-  });
+  const { data: investor, isLoading } = trpc.investors.byId.useQuery({ id: investorId });
 
   if (isLoading) {
     return (
@@ -61,8 +56,6 @@ export default function InvestorProfile() {
     );
   }
 
-  const tags = investor.tags ? JSON.parse(investor.tags as string) : [];
-
   return (
     <div className="space-y-6">
       {/* Back Button */}
@@ -77,11 +70,9 @@ export default function InvestorProfile() {
           <div className="flex gap-6">
             {/* Avatar */}
             <div className="flex-shrink-0">
-              <img
-                src={investor.avatarUrl || ""}
-                alt={investor.name}
-                className="w-24 h-24 rounded-full bg-secondary"
-              />
+              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-3xl font-bold text-white">
+                {investor.name.charAt(0)}
+              </div>
             </div>
 
             {/* Header Info */}
@@ -89,20 +80,18 @@ export default function InvestorProfile() {
               <div className="flex items-start justify-between gap-4 mb-3">
                 <div>
                   <h1 className="text-3xl font-bold">{investor.name}</h1>
-                  <div className="flex items-center gap-2 text-lg text-muted-foreground mt-2">
-                    <span>{investor.title}</span>
-                    {investor.firm && (
-                      <>
-                        <span>•</span>
-                        <Building2 className="h-4 w-4" />
-                        <span>{investor.firm}</span>
-                      </>
-                    )}
-                  </div>
+                  {investor.firm && (
+                    <div className="flex items-center gap-2 text-lg text-muted-foreground mt-2">
+                      <Building2 className="h-4 w-4" />
+                      <span>{investor.firm}</span>
+                    </div>
+                  )}
+                  {investor.type && (
+                    <Badge variant="secondary" className="mt-2">
+                      {investor.type}
+                    </Badge>
+                  )}
                 </div>
-                <Badge variant="secondary" className="text-lg px-4 py-1">
-                  {investor.confidence}% Confidence
-                </Badge>
               </div>
 
               {/* Quick Stats */}
@@ -111,9 +100,6 @@ export default function InvestorProfile() {
                   <div className="flex items-center gap-1.5">
                     <TrendingUp className="h-4 w-4 text-blue-600" />
                     <span className="font-medium">{investor.sector}</span>
-                    {investor.subSector && (
-                      <span className="text-muted-foreground">• {investor.subSector}</span>
-                    )}
                   </div>
                 )}
                 {investor.stage && (
@@ -148,17 +134,17 @@ export default function InvestorProfile() {
                     </a>
                   </Button>
                 )}
-                {investor.linkedinUrl && (
+                {investor.linkedIn && (
                   <Button size="sm" variant="outline" asChild>
-                    <a href={investor.linkedinUrl} target="_blank" rel="noopener noreferrer">
+                    <a href={investor.linkedIn} target="_blank" rel="noopener noreferrer">
                       <Linkedin className="h-3 w-3 mr-1" />
                       LinkedIn
                     </a>
                   </Button>
                 )}
-                {investor.websiteUrl && (
+                {investor.website && (
                   <Button size="sm" variant="outline" asChild>
-                    <a href={investor.websiteUrl} target="_blank" rel="noopener noreferrer">
+                    <a href={investor.website} target="_blank" rel="noopener noreferrer">
                       <Globe className="h-3 w-3 mr-1" />
                       Website
                     </a>
@@ -170,119 +156,65 @@ export default function InvestorProfile() {
         </CardContent>
       </Card>
 
-      {/* Bio & Thesis */}
-      <div className="grid gap-6 md:grid-cols-2">
-        {investor.bio && (
-          <Card>
-            <CardHeader>
-              <CardTitle>About</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground leading-relaxed">{investor.bio}</p>
-            </CardContent>
-          </Card>
-        )}
-
-        {investor.thesis && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Investment Thesis</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground leading-relaxed">{investor.thesis}</p>
-            </CardContent>
-          </Card>
-        )}
-      </div>
-
-      {/* Tags */}
-      {tags.length > 0 && (
+      {/* Bio */}
+      {investor.bio && (
         <Card>
           <CardHeader>
-            <CardTitle>Focus Areas & Expertise</CardTitle>
+            <CardTitle>About</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-wrap gap-2">
-              {tags.map((tag: string, idx: number) => (
-                <Badge key={idx} variant="secondary">
-                  {tag}
-                </Badge>
-              ))}
-            </div>
+            <p className="text-muted-foreground leading-relaxed">{investor.bio}</p>
           </CardContent>
         </Card>
       )}
 
-      {/* Network Connections */}
+      {/* Investment Criteria */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Network className="h-5 w-5" />
-            Network Connections
+            Investment Criteria
           </CardTitle>
-          <CardDescription>
-            {connectionsLoading
-              ? "Loading connections..."
-              : `${connections?.length || 0} connections in the network`}
-          </CardDescription>
+          <CardDescription>Focus areas and investment preferences</CardDescription>
         </CardHeader>
         <CardContent>
-          {connectionsLoading ? (
-            <div className="space-y-3">
-              {Array.from({ length: 3 }).map((_, i) => (
-                <Skeleton key={i} className="h-16 w-full" />
-              ))}
-            </div>
-          ) : connections && connections.length > 0 ? (
-            <div className="space-y-3">
-              {connections && connections.length > 0 ? (
-                connections.slice(0, 5).map((connection: any) => (
-                  <div
-                    key={connection.id}
-                    className="flex items-center justify-between p-3 rounded-lg border"
-                  >
-                    <div className="flex items-center gap-3">
-                      <Users className="h-4 w-4 text-muted-foreground" />
-                      <div>
-                        <div className="font-medium">
-                          Connection #{connection.sourceId === investorId ? connection.targetId : connection.sourceId}
-                        </div>
-                        <div className="text-sm text-muted-foreground capitalize">
-                          {connection.relationshipType?.replace("_", " ") || "Unknown"}
-                        </div>
-                      </div>
-                    </div>
-                    <Badge variant="secondary">{connection.strength || 0}% strength</Badge>
-                  </div>
-                ))
-              ) : (
-                <p className="text-sm text-muted-foreground text-center py-4">
-                  No connections available
-                </p>
-              )}
-              {connections.length > 5 && (
-                <p className="text-sm text-muted-foreground text-center pt-2">
-                  And {connections.length - 5} more connections...
-                </p>
-              )}
-            </div>
-          ) : (
-            <div className="text-center py-8 text-muted-foreground">
-              No connections found in the network
-            </div>
-          )}
+          <div className="grid gap-4 md:grid-cols-2">
+            {investor.sector && (
+              <div>
+                <div className="text-sm font-medium mb-1">Sectors</div>
+                <div className="text-sm text-muted-foreground">{investor.sector}</div>
+              </div>
+            )}
+            {investor.stage && (
+              <div>
+                <div className="text-sm font-medium mb-1">Stages</div>
+                <div className="text-sm text-muted-foreground">{investor.stage}</div>
+              </div>
+            )}
+            {investor.geography && (
+              <div>
+                <div className="text-sm font-medium mb-1">Geography</div>
+                <div className="text-sm text-muted-foreground">{investor.geography}</div>
+              </div>
+            )}
+            {(investor.checkSizeMin || investor.checkSizeMax) && (
+              <div>
+                <div className="text-sm font-medium mb-1">Check Size</div>
+                <div className="text-sm text-muted-foreground">
+                  ${(investor.checkSizeMin || 0) / 1000}K - ${(investor.checkSizeMax || 0) / 1000000}M
+                </div>
+              </div>
+            )}
+          </div>
         </CardContent>
       </Card>
 
       {/* Activity Timeline */}
       <Card>
         <CardHeader>
-          <CardTitle>Recent Activity</CardTitle>
+          <CardTitle>Profile Information</CardTitle>
           <CardDescription>
-            Last interaction:{" "}
-            {investor.lastInteraction
-              ? new Date(investor.lastInteraction).toLocaleDateString()
-              : "Never"}
+            Last updated: {new Date(investor.updatedAt).toLocaleDateString()}
           </CardDescription>
         </CardHeader>
         <CardContent>

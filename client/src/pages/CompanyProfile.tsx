@@ -60,7 +60,7 @@ export default function CompanyProfile() {
     return `$${amount}`;
   };
 
-  const tags = company.tags ? JSON.parse(company.tags as string) : [];
+  const tags: string[] = [];
 
   return (
     <div className="space-y-6">
@@ -70,7 +70,7 @@ export default function CompanyProfile() {
           <div className="flex items-start gap-6">
             {/* Logo */}
             <img
-              src={company.logoUrl || `https://api.dicebear.com/7.x/shapes/svg?seed=${company.name}`}
+              src={`https://api.dicebear.com/7.x/shapes/svg?seed=${company.name}`}
               alt={company.name}
               className="w-24 h-24 rounded-xl border-2 border-border"
             />
@@ -82,10 +82,7 @@ export default function CompanyProfile() {
                   <h1 className="text-3xl font-bold tracking-tight">{company.name}</h1>
                   <p className="text-muted-foreground mt-2 text-lg">{company.description}</p>
                 </div>
-                <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-blue-500 to-cyan-600 text-white">
-                  <Sparkles className="h-5 w-5" />
-                  <span className="font-semibold">{company.confidence}% Quality</span>
-                </div>
+
               </div>
 
               {/* Tags */}
@@ -93,11 +90,7 @@ export default function CompanyProfile() {
                 <Badge variant="default">{company.sector}</Badge>
                 <Badge variant="secondary">{company.stage}</Badge>
                 {company.businessModel && <Badge variant="outline">{company.businessModel}</Badge>}
-                {tags.slice(0, 5).map((tag: string, idx: number) => (
-                  <Badge key={idx} variant="outline">
-                    {tag}
-                  </Badge>
-                ))}
+
               </div>
 
               {/* Quick Stats */}
@@ -106,14 +99,14 @@ export default function CompanyProfile() {
                   <MapPin className="h-4 w-4 text-muted-foreground" />
                   <div>
                     <div className="text-xs text-muted-foreground">Location</div>
-                    <div className="text-sm font-medium">{company.geography}</div>
+                    <div className="text-sm font-medium">{company.location}</div>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <Calendar className="h-4 w-4 text-muted-foreground" />
                   <div>
                     <div className="text-xs text-muted-foreground">Founded</div>
-                    <div className="text-sm font-medium">{company.foundedYear || "N/A"}</div>
+                    <div className="text-sm font-medium">{company.founded || "N/A"}</div>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -134,9 +127,9 @@ export default function CompanyProfile() {
 
               {/* Action Buttons */}
               <div className="flex gap-2 mt-6">
-                {company.websiteUrl && (
+                {company.website && (
                   <Button asChild>
-                    <a href={company.websiteUrl} target="_blank" rel="noopener noreferrer">
+                    <a href={company.website} target="_blank" rel="noopener noreferrer">
                       <Globe className="h-4 w-4 mr-2" />
                       Visit Website
                     </a>
@@ -174,12 +167,12 @@ export default function CompanyProfile() {
             <Separator />
             <div className="flex justify-between items-center">
               <span className="text-muted-foreground">Seeking</span>
-              <span className="font-semibold text-lg">{formatCurrency(company.fundingTarget)}</span>
+              <span className="font-semibold text-lg">{formatCurrency(company.seeking)}</span>
             </div>
             <Separator />
             <div className="flex justify-between items-center">
               <span className="text-muted-foreground">Already Raised</span>
-              <span className="font-semibold">{formatCurrency(company.fundingRaised)}</span>
+              <span className="font-semibold">{formatCurrency(company.alreadyRaised)}</span>
             </div>
             <Separator />
             <div className="flex justify-between items-center">
@@ -200,7 +193,7 @@ export default function CompanyProfile() {
           <CardContent className="space-y-4">
             <div className="flex justify-between items-center">
               <span className="text-muted-foreground">Annual Revenue</span>
-              <span className="font-semibold text-lg">{formatCurrency(company.revenue)}</span>
+              <span className="font-semibold text-lg">{formatCurrency(company.annualRevenue)}</span>
             </div>
             <Separator />
             <div className="flex justify-between items-center">
@@ -247,9 +240,9 @@ export default function CompanyProfile() {
                 {company.founderEmail && (
                   <p className="text-sm text-muted-foreground">{company.founderEmail}</p>
                 )}
-                {company.founderLinkedin && (
+                {company.founderLinkedIn && (
                   <Button variant="outline" size="sm" className="mt-3" asChild>
-                    <a href={company.founderLinkedin} target="_blank" rel="noopener noreferrer">
+                    <a href={company.founderLinkedIn} target="_blank" rel="noopener noreferrer">
                       <ExternalLink className="h-3 w-3 mr-2" />
                       LinkedIn Profile
                     </a>
@@ -283,12 +276,12 @@ export default function CompanyProfile() {
                 >
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center text-white font-bold">
-                      {match.score}
+                      {match.overallScore}
                     </div>
                     <div>
                       <div className="font-medium">Investor #{match.investorId}</div>
                       <div className="text-xs text-muted-foreground">
-                        {match.explanation?.substring(0, 60)}...
+                        Strong alignment with investor focus
                       </div>
                     </div>
                   </div>

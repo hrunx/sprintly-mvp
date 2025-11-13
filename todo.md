@@ -91,3 +91,20 @@
 - [x] Add AI extraction for pitch deck metrics
 - [ ] Update README with all new features and screenshots
 - [ ] Push all changes to GitHub repository
+
+## Local Deployment Branch (NEW REQUIREMENT)
+- [ ] Create local2 branch in GitHub
+- [x] Remove all Manus OAuth dependencies
+- [x] Replace with simple email/password authentication (JWT-based)
+- [x] Remove Manus AI service integrations
+- [x] Replace with OpenAI API for AI features
+- [x] Add cookie-parser middleware for authentication
+- [x] Create Login/Register page with tabs
+- [x] Update auth context to use JWT tokens
+- [x] Create seed script with demo user and sample data
+- [x] Test complete authentication workflow
+- [ ] Update environment variables for local deployment
+- [ ] Create .env.example with all required variables
+- [ ] Update README with local deployment instructions
+- [ ] Add Docker Compose configuration for easy setup
+- [ ] Push local2 branch to GitHub

@@ -138,12 +138,22 @@ export default function Settings() {
   const [selectedPreset, setSelectedPreset] = useState<string>("balanced");
   const [hasChanges, setHasChanges] = useState(false);
 
-  const { data: savedConfig, isLoading } = trpc.settings.getMatchingConfig.useQuery();
-  const saveConfigMutation = trpc.settings.saveMatchingConfig.useMutation();
+  const { data: savedConfig, isLoading } = trpc.settings.getConfig.useQuery();
+  const saveConfigMutation = trpc.settings.saveConfig.useMutation();
 
   useEffect(() => {
     if (savedConfig) {
-      setConfig(savedConfig);
+      setConfig({
+        ...savedConfig,
+        filters: {
+          ...savedConfig.filters,
+          requireTraction: savedConfig.filters.requireTraction || false,
+        },
+        thresholds: {
+          ...savedConfig.thresholds,
+          minStageScore: savedConfig.thresholds.minStageScore || 50,
+        },
+      });
     }
   }, [savedConfig]);
 

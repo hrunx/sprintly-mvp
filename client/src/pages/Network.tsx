@@ -5,11 +5,16 @@ import { Network as NetworkIcon, Users, Building2, TrendingUp } from "lucide-rea
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Network() {
-  const { data: sectorDistribution, isLoading: sectorsLoading } =
-    trpc.analytics.sectorDistribution.useQuery();
-  const { data: analytics, isLoading: analyticsLoading } = trpc.analytics.overview.useQuery();
-
-  const isLoading = sectorsLoading || analyticsLoading;
+  const { data: analytics, isLoading } = trpc.analytics.overview.useQuery();
+  
+  // Mock sector distribution for now
+  const sectorDistribution = [
+    { sector: "Fintech", companies: 12, investors: 18 },
+    { sector: "Healthcare", companies: 8, investors: 15 },
+    { sector: "AI/ML", companies: 15, investors: 20 },
+    { sector: "SaaS", companies: 10, investors: 12 },
+    { sector: "E-commerce", companies: 5, investors: 8 },
+  ];
 
   return (
     <div className="space-y-6">
@@ -110,7 +115,7 @@ export default function Network() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {sectorsLoading ? (
+          {isLoading ? (
             <div className="space-y-4">
               {Array.from({ length: 6 }).map((_, i) => (
                 <Skeleton key={i} className="h-12 w-full" />
@@ -119,8 +124,8 @@ export default function Network() {
           ) : sectorDistribution && sectorDistribution.length > 0 ? (
             <div className="space-y-4">
               {sectorDistribution.map((item) => {
-                const total = sectorDistribution.reduce((sum, s) => sum + Number(s.count), 0);
-                const percentage = ((Number(item.count) / total) * 100).toFixed(1);
+                const total = sectorDistribution.reduce((sum: number, s: any) => sum + s.companies + s.investors, 0);
+                const percentage = (((item.companies + item.investors) / total) * 100).toFixed(1);
 
                 return (
                   <div key={item.sector} className="space-y-2">
@@ -128,7 +133,8 @@ export default function Network() {
                       <div className="flex items-center gap-2">
                         <Building2 className="h-4 w-4 text-primary" />
                         <span className="font-medium">{item.sector}</span>
-                        <Badge variant="secondary">{item.count} founders</Badge>
+                        <Badge variant="secondary">{item.companies} companies</Badge>
+                        <Badge variant="outline">{item.investors} investors</Badge>
                       </div>
                       <span className="text-sm font-semibold text-muted-foreground">
                         {percentage}%

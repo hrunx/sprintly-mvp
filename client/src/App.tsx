@@ -14,10 +14,12 @@ import Settings from "./pages/Settings";
 import DataImport from "./pages/DataImport";
 import Connections from "./pages/Connections";
 import CompanyProfile from "./pages/CompanyProfile";
+import Login from "./pages/Login";
 
 function Router() {
   return (
     <Switch>
+      <Route path="/login" component={Login} />
       <Route path="/" component={() => <DashboardLayout><Dashboard /></DashboardLayout>} />
       <Route path="/search" component={() => <DashboardLayout><Search /></DashboardLayout>} />
       <Route path="/matches" component={() => <DashboardLayout><Matches /></DashboardLayout>} />

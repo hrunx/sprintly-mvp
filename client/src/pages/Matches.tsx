@@ -27,18 +27,14 @@ import {
 export default function Matches() {
   const [selectedCompany, setSelectedCompany] = useState<number>(1);
 
-  const { data: companies } = trpc.companies.list.useQuery({
-    limit: 50,
-  });
+  const { data: companies } = trpc.companies.list.useQuery({});
 
   const { data: matches, isLoading } = trpc.matches.list.useQuery({
     companyId: selectedCompany,
     limit: 20,
   });
 
-  const { data: investors } = trpc.investors.list.useQuery({
-    limit: 200,
-  });
+  const { data: investors } = trpc.investors.list.useQuery({});
 
   const requestIntroMutation = trpc.introRequests.create.useMutation();
 
@@ -136,7 +132,6 @@ export default function Matches() {
             const matchReasons = match.matchReasons
               ? JSON.parse(match.matchReasons as string)
               : [];
-            const concerns = match.concerns ? JSON.parse(match.concerns as string) : [];
 
             return (
               <Card
@@ -150,7 +145,7 @@ export default function Matches() {
                     <div className="flex-1 space-y-4">
                       <div className="flex items-start gap-4">
                         <img
-                          src={investor.avatarUrl || "https://api.dicebear.com/7.x/avataaars/svg?seed=investor"}
+                          src={"https://api.dicebear.com/7.x/avataaars/svg?seed=investor"}
                           alt={investor.name}
                           className="w-16 h-16 rounded-full border-2 border-border"
                         />
@@ -162,7 +157,7 @@ export default function Matches() {
                             </Badge>
                           </div>
                           <p className="text-muted-foreground text-sm mb-2">
-                            {investor.title} at {investor.firm}
+                            {investor.firm}
                           </p>
                           <p className="text-sm line-clamp-2">{investor.bio}</p>
                         </div>
@@ -206,7 +201,7 @@ export default function Matches() {
                       {/* Match Explanation */}
                       <div className="space-y-2">
                         <div className="text-sm font-medium">Why this is a good match:</div>
-                        <p className="text-sm text-muted-foreground">{match.explanation}</p>
+                        <p className="text-sm text-muted-foreground">This investor's focus aligns well with your company profile.</p>
                         
                         {matchReasons.length > 0 && (
                           <div className="flex flex-wrap gap-2 mt-2">
@@ -252,14 +247,14 @@ export default function Matches() {
                     <div className="flex flex-col items-center gap-2">
                       <div
                         className={`flex flex-col items-center justify-center w-24 h-24 rounded-full border-4 ${getScoreColor(
-                          match.score
+                          match.overallScore
                         )}`}
                       >
-                        <div className="text-3xl font-bold">{match.score}</div>
+                        <div className="text-3xl font-bold">{match.overallScore}</div>
                         <div className="text-xs">Score</div>
                       </div>
-                      <Badge className={getScoreColor(match.score)}>
-                        {getScoreLabel(match.score)}
+                      <Badge className={getScoreColor(match.overallScore)}>
+                        {getScoreLabel(match.overallScore)}
                       </Badge>
                       <div className="flex flex-col gap-2 mt-2">
                         <Button size="sm" variant="outline">

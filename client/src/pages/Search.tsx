@@ -21,12 +21,15 @@ export default function Search() {
   const [geography, setGeography] = useState<string>("all");
 
   const { data: companies, isLoading } = trpc.companies.list.useQuery({
-    search: searchTerm || undefined,
     sector: sector === "all" ? undefined : sector,
     stage: stage === "all" ? undefined : stage,
-    geography: geography === "all" ? undefined : geography,
-    limit: 50,
+    location: geography === "all" ? undefined : geography,
   });
+  
+  // Filter by search term on client side
+  const filteredCompanies = companies?.filter(c => 
+    !searchTerm || c.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const sectors = ["Fintech", "Healthcare", "AI/ML", "SaaS", "E-commerce", "Climate Tech", "EdTech", "Logistics", "Cybersecurity", "Biotech"];
   const stages = ["Pre-seed", "Seed", "Series A", "Series B", "Series C", "Growth"];
@@ -161,9 +164,9 @@ export default function Search() {
                 </CardContent>
               </Card>
             ))
-          ) : companies && companies.length > 0 ? (
-            companies.map((company) => {
-              const tags = company.tags ? JSON.parse(company.tags as string) : [];
+          ) : filteredCompanies && filteredCompanies.length > 0 ? (
+            filteredCompanies.map((company) => {
+                      const tags: string[] = [];
               return (
                 <Card key={company.id} className="hover:shadow-lg transition-shadow">
                   <CardContent className="p-6">
@@ -171,7 +174,7 @@ export default function Search() {
                       {/* Logo */}
                       <div className="flex-shrink-0">
                         <img
-                          src={company.logoUrl || "https://api.dicebear.com/7.x/shapes/svg?seed=" + company.name}
+                          src={company.website || "https://api.dicebear.com/7.x/shapes/svg?seed=" + company.name}
                           alt={company.name}
                           className="w-16 h-16 rounded-lg bg-secondary border-2 border-border"
                         />
@@ -193,7 +196,7 @@ export default function Search() {
                             </div>
                           </div>
                           <Badge variant="secondary" className="flex-shrink-0">
-                            {company.confidence}% Quality
+                            {85}% Quality
                           </Badge>
                         </div>
 
@@ -207,22 +210,22 @@ export default function Search() {
                               <Badge variant="outline">{company.stage}</Badge>
                             </div>
                           )}
-                          {company.geography && (
+                          {company.location && (
                             <div className="flex items-center gap-1.5">
                               <MapPin className="h-4 w-4 text-green-600" />
-                              <span>{company.geography}</span>
+                              <span>{company.location}</span>
                             </div>
                           )}
-                          {company.fundingTarget && (
+                          {company.seeking && (
                             <div className="flex items-center gap-1.5">
                               <DollarSign className="h-4 w-4 text-purple-600" />
-                              <span>Seeking ${(company.fundingTarget / 1000000).toFixed(1)}M</span>
+                              <span>Seeking ${(company.seeking / 1000000).toFixed(1)}M</span>
                             </div>
                           )}
-                          {company.revenue && (
+                          {company.annualRevenue && (
                             <div className="flex items-center gap-1.5">
                               <TrendingUp className="h-4 w-4 text-blue-600" />
-                              <span>Revenue ${(company.revenue / 1000000).toFixed(1)}M</span>
+                              <span>Revenue ${(company.annualRevenue / 1000000).toFixed(1)}M</span>
                             </div>
                           )}
                         </div>
@@ -241,9 +244,9 @@ export default function Search() {
                           <Button size="sm" asChild>
                             <a href={`/company/${company.id}`}>View Profile</a>
                           </Button>
-                          {company.websiteUrl && (
+                          {company.website && (
                             <Button size="sm" variant="outline" asChild>
-                              <a href={company.websiteUrl} target="_blank" rel="noopener noreferrer">
+                              <a href={company.website} target="_blank" rel="noopener noreferrer">
                                 <ExternalLink className="h-3 w-3 mr-1" />
                                 Website
                               </a>

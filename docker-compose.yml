@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  # MySQL Database
+  mysql:
+    image: mysql:8.0
+    container_name: sprintly-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: sprintly_root_password
+      MYSQL_DATABASE: sprintly
+      MYSQL_USER: sprintly_user
+      MYSQL_PASSWORD: sprintly_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  # Sprintly Application
+  app:
+    build: .
+    container_name: sprintly-app
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: mysql://sprintly_user:sprintly_password@mysql:3306/sprintly
+      JWT_SECRET: ${JWT_SECRET:-change-this-in-production-min-32-chars}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      VITE_APP_TITLE: Sprintly AI
+      VITE_APP_LOGO: /logo.svg
+      NODE_ENV: production
+      PORT: 3000
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+
+volumes:
+  mysql_data:

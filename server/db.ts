@@ -1,11 +1,10 @@
-import { eq, and, or, like, desc, sql } from "drizzle-orm";
+import { eq, and, or, desc, sql, inArray } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { 
   InsertUser, users, 
-  companies, investors, matches, connections,
-  Company, Investor, Match, Connection
+  companies, investors, matches,
+  Company, Investor, Match
 } from "../drizzle/schema";
-import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
@@ -22,292 +21,200 @@ export async function getDb() {
   return _db;
 }
 
-export async function upsertUser(user: InsertUser): Promise<void> {
-  if (!user.openId) {
-    throw new Error("User openId is required for upsert");
-  }
-
-  const db = await getDb();
-  if (!db) {
-    console.warn("[Database] Cannot upsert user: database not available");
-    return;
-  }
-
-  try {
-    const values: InsertUser = {
-      openId: user.openId,
-    };
-    const updateSet: Record<string, unknown> = {};
-
-    const textFields = ["name", "email", "loginMethod"] as const;
-    type TextField = (typeof textFields)[number];
-
-    const assignNullable = (field: TextField) => {
-      const value = user[field];
-      if (value === undefined) return;
-      const normalized = value ?? null;
-      values[field] = normalized;
-      updateSet[field] = normalized;
-    };
-
-    textFields.forEach(assignNullable);
-
-    if (user.lastSignedIn !== undefined) {
-      values.lastSignedIn = user.lastSignedIn;
-      updateSet.lastSignedIn = user.lastSignedIn;
-    }
-    if (user.role !== undefined) {
-      values.role = user.role;
-      updateSet.role = user.role;
-    } else if (user.openId === ENV.ownerOpenId) {
-      values.role = 'admin';
-      updateSet.role = 'admin';
-    }
-
-    if (!values.lastSignedIn) {
-      values.lastSignedIn = new Date();
-    }
-
-    if (Object.keys(updateSet).length === 0) {
-      updateSet.lastSignedIn = new Date();
-    }
-
-    await db.insert(users).values(values).onDuplicateKeyUpdate({
-      set: updateSet,
-    });
-  } catch (error) {
-    console.error("[Database] Failed to upsert user:", error);
-    throw error;
-  }
-}
-
-export async function getUserByOpenId(openId: string) {
+export async function getUserByEmail(email: string) {
   const db = await getDb();
   if (!db) {
     console.warn("[Database] Cannot get user: database not available");
     return undefined;
   }
 
-  const result = await db.select().from(users).where(eq(users.openId, openId)).limit(1);
-
+  const result = await db.select().from(users).where(eq(users.email, email)).limit(1);
   return result.length > 0 ? result[0] : undefined;
 }
 
-/**
- * COMPANY QUERIES
- */
+export async function getUserById(id: number) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot get user: database not available");
+    return undefined;
+  }
+
+  const result = await db.select().from(users).where(eq(users.id, id)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+// ============= COMPANIES =============
+
+export async function getAllCompanies(limit: number = 100) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return db.select().from(companies).limit(limit);
+}
 
 export async function getCompanyById(id: number) {
   const db = await getDb();
-  if (!db) return undefined;
-
+  if (!db) return null;
+  
   const result = await db.select().from(companies).where(eq(companies.id, id)).limit(1);
-  return result.length > 0 ? result[0] : undefined;
+  return result[0] || null;
 }
 
-export async function listCompanies(criteria: {
-  search?: string;
+export async function searchCompanies(filters: {
   sector?: string;
   stage?: string;
-  geography?: string;
-  limit?: number;
+  location?: string;
+  minRevenue?: number;
+  maxSeeking?: number;
 }) {
   const db = await getDb();
   if (!db) return [];
 
+  let query = db.select().from(companies);
   const conditions = [];
-  
-  if (criteria.search) {
-    conditions.push(
-      or(
-        like(companies.name, `%${criteria.search}%`),
-        like(companies.description, `%${criteria.search}%`)
-      )!
-    );
-  }
-  if (criteria.sector) conditions.push(eq(companies.sector, criteria.sector));
-  if (criteria.stage) conditions.push(eq(companies.stage, criteria.stage));
-  if (criteria.geography) conditions.push(like(companies.geography, `%${criteria.geography}%`));
 
-  const query = db.select().from(companies);
-  
-  if (conditions.length > 0) {
-    return query.where(and(...conditions)!).limit(criteria.limit || 50);
+  if (filters.sector) {
+    conditions.push(eq(companies.sector, filters.sector));
   }
-  
-  return query.limit(criteria.limit || 50);
+  if (filters.stage) {
+    conditions.push(eq(companies.stage, filters.stage));
+  }
+  if (filters.location) {
+    conditions.push(eq(companies.location, filters.location));
+  }
+  if (filters.minRevenue) {
+    conditions.push(sql`${companies.annualRevenue} >= ${filters.minRevenue}`);
+  }
+  if (filters.maxSeeking) {
+    conditions.push(sql`${companies.seeking} <= ${filters.maxSeeking}`);
+  }
+
+  if (conditions.length > 0) {
+    query = query.where(and(...conditions)) as any;
+  }
+
+  return query.limit(100);
 }
 
-/**
- * INVESTOR QUERIES
- */
+// ============= INVESTORS =============
+
+export async function getAllInvestors(limit: number = 100) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return db.select().from(investors).limit(limit);
+}
 
 export async function getInvestorById(id: number) {
   const db = await getDb();
-  if (!db) return undefined;
-
+  if (!db) return null;
+  
   const result = await db.select().from(investors).where(eq(investors.id, id)).limit(1);
-  return result.length > 0 ? result[0] : undefined;
+  return result[0] || null;
 }
 
-export async function listInvestors(criteria: {
-  search?: string;
+export async function searchInvestors(filters: {
   sector?: string;
   stage?: string;
   geography?: string;
-  limit?: number;
+  minCheckSize?: number;
+  maxCheckSize?: number;
 }) {
   const db = await getDb();
   if (!db) return [];
 
+  let query = db.select().from(investors);
   const conditions = [];
-  
-  if (criteria.search) {
-    conditions.push(
-      or(
-        like(investors.name, `%${criteria.search}%`),
-        like(investors.firm, `%${criteria.search}%`),
-        like(investors.bio, `%${criteria.search}%`)
-      )!
-    );
-  }
-  if (criteria.sector) conditions.push(eq(investors.sector, criteria.sector));
-  if (criteria.stage) conditions.push(eq(investors.stage, criteria.stage));
-  if (criteria.geography) conditions.push(like(investors.geography, `%${criteria.geography}%`));
 
-  const query = db.select().from(investors);
-  
-  if (conditions.length > 0) {
-    return query.where(and(...conditions)!).orderBy(desc(investors.confidence)).limit(criteria.limit || 50);
+  if (filters.sector) {
+    conditions.push(sql`${investors.sector} LIKE ${`%${filters.sector}%`}`);
   }
-  
-  return query.orderBy(desc(investors.confidence)).limit(criteria.limit || 50);
+  if (filters.stage) {
+    conditions.push(sql`${investors.stage} LIKE ${`%${filters.stage}%`}`);
+  }
+  if (filters.geography) {
+    conditions.push(sql`${investors.geography} LIKE ${`%${filters.geography}%`}`);
+  }
+  if (filters.minCheckSize) {
+    conditions.push(sql`${investors.checkSizeMin} >= ${filters.minCheckSize}`);
+  }
+  if (filters.maxCheckSize) {
+    conditions.push(sql`${investors.checkSizeMax} <= ${filters.maxCheckSize}`);
+  }
+
+  if (conditions.length > 0) {
+    query = query.where(and(...conditions)) as any;
+  }
+
+  return query.limit(100);
 }
 
-/**
- * MATCH QUERIES
- */
+// ============= MATCHES =============
 
-export async function getCompanyMatches(companyId: number, limit = 20) {
+export async function getTopMatches(companyId?: number, limit: number = 20) {
   const db = await getDb();
   if (!db) return [];
 
-  return db
-    .select()
-    .from(matches)
-    .where(eq(matches.companyId, companyId))
-    .orderBy(desc(matches.score))
-    .limit(limit);
+  let query = db.select().from(matches).orderBy(desc(matches.overallScore));
+
+  if (companyId) {
+    query = query.where(eq(matches.companyId, companyId)) as any;
+  }
+
+  return query.limit(limit);
 }
 
 export async function getMatchById(id: number) {
   const db = await getDb();
-  if (!db) return undefined;
-
+  if (!db) return null;
+  
   const result = await db.select().from(matches).where(eq(matches.id, id)).limit(1);
-  return result.length > 0 ? result[0] : undefined;
+  return result[0] || null;
 }
 
-export async function listMatches(criteria: {
-  companyId?: number;
-  investorId?: number;
-  minScore?: number;
-  limit?: number;
+export async function createMatch(match: {
+  companyId: number;
+  investorId: number;
+  overallScore: number;
+  sectorScore?: number;
+  stageScore?: number;
+  geoScore?: number;
+  tractionScore?: number;
+  checkSizeScore?: number;
+  thesisScore?: number;
+  matchReasons?: string;
 }) {
   const db = await getDb();
-  if (!db) return [];
+  if (!db) return null;
 
-  const conditions = [];
+  await db.insert(matches).values(match);
   
-  if (criteria.companyId) conditions.push(eq(matches.companyId, criteria.companyId));
-  if (criteria.investorId) conditions.push(eq(matches.investorId, criteria.investorId));
-  if (criteria.minScore) conditions.push(sql`${matches.score} >= ${criteria.minScore}`);
-
-  const query = db.select().from(matches);
+  // Return the created match
+  const result = await db.select().from(matches)
+    .where(and(
+      eq(matches.companyId, match.companyId),
+      eq(matches.investorId, match.investorId)
+    ))
+    .limit(1);
   
-  if (conditions.length > 0) {
-    return query.where(and(...conditions)!).orderBy(desc(matches.score)).limit(criteria.limit || 50);
-  }
-  
-  return query.orderBy(desc(matches.score)).limit(criteria.limit || 50);
+  return result[0] || null;
 }
 
-/**
- * Get detailed match with company and investor info
- */
-export async function getMatchWithDetails(matchId: number) {
-  const db = await getDb();
-  if (!db) return undefined;
-
-  const match = await getMatchById(matchId);
-  if (!match) return undefined;
-
-  const company = await getCompanyById(match.companyId);
-  const investor = await getInvestorById(match.investorId);
-
-  return {
-    ...match,
-    company,
-    investor,
-  };
-}
-
-/**
- * ANALYTICS QUERIES
- */
+// ============= ANALYTICS =============
 
 export async function getAnalytics() {
   const db = await getDb();
-  if (!db) return {
-    totalCompanies: 0,
-    totalInvestors: 0,
-    totalMatches: 0,
-    avgMatchScore: 0,
-  };
+  if (!db) return null;
 
   const [companiesCount] = await db.select({ count: sql<number>`count(*)` }).from(companies);
   const [investorsCount] = await db.select({ count: sql<number>`count(*)` }).from(investors);
   const [matchesCount] = await db.select({ count: sql<number>`count(*)` }).from(matches);
-  const [avgScore] = await db.select({ avg: sql<number>`avg(${matches.score})` }).from(matches);
+  const [avgScore] = await db.select({ avg: sql<number>`avg(${matches.overallScore})` }).from(matches);
 
   return {
-    totalCompanies: Number(companiesCount.count),
-    totalInvestors: Number(investorsCount.count),
-    totalMatches: Number(matchesCount.count),
+    totalCompanies: Number(companiesCount.count) || 0,
+    totalInvestors: Number(investorsCount.count) || 0,
+    totalMatches: Number(matchesCount.count) || 0,
     avgMatchScore: Math.round(Number(avgScore.avg) || 0),
   };
-}
-
-/**
- * Get sector distribution
- */
-export async function getSectorDistribution() {
-  const db = await getDb();
-  if (!db) return [];
-
-  return db
-    .select({
-      sector: companies.sector,
-      count: sql<number>`count(*)`,
-    })
-    .from(companies)
-    .groupBy(companies.sector)
-    .orderBy(desc(sql`count(*)`));
-}
-
-/**
- * Get stage distribution
- */
-export async function getStageDistribution() {
-  const db = await getDb();
-  if (!db) return [];
-
-  return db
-    .select({
-      stage: companies.stage,
-      count: sql<number>`count(*)`,
-    })
-    .from(companies)
-    .groupBy(companies.stage)
-    .orderBy(desc(sql`count(*)`));
 }
