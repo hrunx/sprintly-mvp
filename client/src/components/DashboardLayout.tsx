@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/sidebar";
 import { APP_LOGO, APP_TITLE, getLoginUrl } from "@/const";
 import { useIsMobile } from "@/hooks/useMobile";
-import { LayoutDashboard, LogOut, PanelLeft, Users, Search, Target, Network, Settings as SettingsIcon } from "lucide-react";
+import { LayoutDashboard, LogOut, PanelLeft, Users, Search, Target, Network, Settings as SettingsIcon, Upload } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
@@ -32,6 +32,7 @@ const menuItems = [
   { icon: Search, label: "Browse Companies", path: "/search" },
   { icon: Target, label: "Top Matches", path: "/matches" },
   { icon: Network, label: "Network", path: "/network" },
+  { icon: Upload, label: "Data Import", path: "/import" },
   { icon: SettingsIcon, label: "Settings", path: "/settings" },
 ];
 

@@ -58,3 +58,15 @@
 - [x] Capture screenshot of Company Profile page
 - [x] Capture screenshot of Investor Profile page
 - [x] Update README with all new screenshots
+
+## Data Import Feature (NEW REQUIREMENT)
+- [x] Create LinkedIn CSV sample templates for companies and investors
+- [x] Define CSV format specifications and column mappings
+- [x] Build backend CSV parser with validation
+- [x] Create bulk import API endpoints
+- [x] Build Data Import UI page with file upload
+- [x] Add CSV preview and validation before import
+- [x] Implement column mapping interface
+- [x] Add progress tracking for bulk imports
+- [x] Create downloadable sample CSV templates
+- [x] Add error handling and validation messages

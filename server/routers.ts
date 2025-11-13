@@ -3,8 +3,182 @@ import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { z } from "zod";
+import { getDb } from "./db";
+import { companies, investors } from "../drizzle/schema";
 
 export const appRouter = router({
+  import: router({
+    parseCompaniesCSV: protectedProcedure
+      .input(z.object({ csvData: z.string() }))
+      .mutation(async ({ input }) => {
+        const lines = input.csvData.trim().split('\n');
+        if (lines.length < 2) throw new Error('CSV must have header and at least one data row');
+        
+        const headers = lines[0].split(',').map(h => h.trim());
+        const companies = [];
+        const errors = [];
+        
+        for (let i = 1; i < lines.length; i++) {
+          try {
+            const values = lines[i].split(',').map(v => v.trim());
+            const company: any = {};
+            
+            headers.forEach((header, idx) => {
+              const value = values[idx] || '';
+              
+              // Map LinkedIn CSV columns to our database fields
+              switch(header) {
+                case 'Company Name': company.name = value; break;
+                case 'Website': company.website = value; break;
+                case 'Description': company.description = value; break;
+                case 'Industry': company.sector = value; break;
+                case 'Company Size': company.teamSize = parseInt(value) || 0; break;
+                case 'Location': company.geography = value; break;
+                case 'Founded Year': company.founded = parseInt(value) || new Date().getFullYear(); break;
+                case 'Growth Rate': company.revenueGrowth = parseInt(value.replace('%', '')) || 0; break;
+                case 'Funding Stage': company.stage = value; break;
+                case 'Funding Seeking': company.fundingTarget = parseInt(value.replace(/[^0-9]/g, '')) || 0; break;
+                case 'Funding Raised': company.fundingRaised = parseInt(value.replace(/[^0-9]/g, '')) || 0; break;
+                case 'Valuation': company.valuation = parseInt(value.replace(/[^0-9]/g, '')) || 0; break;
+                case 'Founder Name': company.founderName = value; break;
+                case 'Founder Email': company.founderEmail = value; break;
+                case 'Founder LinkedIn': company.founderLinkedin = value; break;
+                case 'Pitch Deck URL': company.pitchDeckUrl = value; break;
+                case 'Revenue Range':
+                  const match = value.match(/\$([0-9.]+)M/);
+                  if (match) company.revenue = parseFloat(match[1]) * 1000000;
+                  break;
+              }
+            });
+            
+            // Validation
+            if (!company.name) throw new Error('Company name is required');
+            if (!company.sector) throw new Error('Industry/Sector is required');
+            
+            companies.push(company);
+          } catch (error: any) {
+            errors.push({ row: i + 1, error: error.message });
+          }
+        }
+        
+        return { companies, errors, total: lines.length - 1 };
+      }),
+      
+    parseInvestorsCSV: protectedProcedure
+      .input(z.object({ csvData: z.string() }))
+      .mutation(async ({ input }) => {
+        const lines = input.csvData.trim().split('\n');
+        if (lines.length < 2) throw new Error('CSV must have header and at least one data row');
+        
+        const headers = lines[0].split(',').map(h => h.trim());
+        const investors = [];
+        const errors = [];
+        
+        for (let i = 1; i < lines.length; i++) {
+          try {
+            const values = lines[i].split(',').map(v => v.trim());
+            const investor: any = {};
+            
+            headers.forEach((header, idx) => {
+              const value = values[idx] || '';
+              
+              // Map LinkedIn CSV columns to our database fields
+              switch(header) {
+                case 'Full Name': investor.name = value; break;
+                case 'Title': investor.title = value; break;
+                case 'Company': investor.firm = value; break;
+                case 'Email': investor.email = value; break;
+                case 'LinkedIn URL': investor.linkedin = value; break;
+                case 'Website': investor.website = value; break;
+                case 'Location': investor.geography = value; break;
+                case 'Investment Thesis': investor.thesis = value; break;
+                case 'Bio': investor.bio = value; break;
+                case 'Focus Sectors': 
+                  investor.focusSectors = value.split(',').map(s => s.trim());
+                  break;
+                case 'Focus Stages': 
+                  investor.focusStages = value.split(',').map(s => s.trim());
+                  break;
+                case 'Focus Geographies': 
+                  investor.focusGeographies = value.split(',').map(s => s.trim());
+                  break;
+                case 'Check Size Min': 
+                  investor.checkSizeMin = parseInt(value.replace(/[^0-9]/g, '')) || 0;
+                  break;
+                case 'Check Size Max': 
+                  investor.checkSizeMax = parseInt(value.replace(/[^0-9]/g, '')) || 0;
+                  break;
+                case 'Portfolio Companies': 
+                  investor.portfolioSize = parseInt(value) || 0;
+                  break;
+              }
+            });
+            
+            // Validation
+            if (!investor.name) throw new Error('Investor name is required');
+            if (!investor.firm) throw new Error('Company/Firm is required');
+            
+            investors.push(investor);
+          } catch (error: any) {
+            errors.push({ row: i + 1, error: error.message });
+          }
+        }
+        
+        return { investors, errors, total: lines.length - 1 };
+      }),
+      
+    importCompanies: protectedProcedure
+      .input(z.object({ companies: z.array(z.any()) }))
+      .mutation(async ({ input }) => {
+        const db = await getDb();
+        if (!db) throw new Error('Database not available');
+        
+        let imported = 0;
+        const errors = [];
+        
+        for (const company of input.companies) {
+          try {
+            await db.insert(companies).values({
+              ...company,
+              businessModel: company.businessModel || 'B2B SaaS',
+              customers: company.customers || 0,
+              mrr: company.mrr || 0,
+              confidence: 85
+            });
+            imported++;
+          } catch (error: any) {
+            errors.push({ company: company.name, error: error.message });
+          }
+        }
+        
+        return { imported, errors, total: input.companies.length };
+      }),
+      
+    importInvestors: protectedProcedure
+      .input(z.object({ investors: z.array(z.any()) }))
+      .mutation(async ({ input }) => {
+        const db = await getDb();
+        if (!db) throw new Error('Database not available');
+        
+        let imported = 0;
+        const errors = [];
+        
+        for (const investor of input.investors) {
+          try {
+            await db.insert(investors).values({
+              ...investor,
+              type: 'VC',
+              confidence: 85
+            });
+            imported++;
+          } catch (error: any) {
+            errors.push({ investor: investor.name, error: error.message });
+          }
+        }
+        
+        return { imported, errors, total: input.investors.length };
+      }),
+  }),
   settings: router({
     getMatchingConfig: protectedProcedure.query(async ({ ctx }) => {
       // Return default config for now (will implement DB storage later)
