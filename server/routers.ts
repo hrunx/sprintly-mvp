@@ -7,6 +7,7 @@ import { getDb } from "./db";
 import { eq, desc } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { companies, investors, introRequests, matches, connections } from "../drizzle/schema";
+import { sdk } from "./_core/sdk";
 
 export const appRouter = router({
   import: router({

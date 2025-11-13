@@ -273,6 +273,7 @@ Company + Investor
    ```env
    DATABASE_URL=mysql://user:password@localhost:3306/sprintly
    JWT_SECRET=your-secret-key-here
+   VITE_APP_ID=sprintly-local
    VITE_APP_TITLE=Sprintly AI
    VITE_APP_LOGO=/logo.svg
    ```
@@ -300,6 +301,31 @@ Company + Investor
    ```
    http://localhost:3000
    ```
+
+### Environment Variables (Self-hosted, no Manus)
+
+Create a `.env` file in the project root:
+
+```env
+# Server
+NODE_ENV=development
+PORT=3000
+
+# Database
+DATABASE_URL=mysql://user:password@localhost:3306/sprintly
+
+# Auth/session (not used for gating in demo, but required by server)
+JWT_SECRET=change-me-please
+VITE_APP_ID=sprintly-local
+
+# Client branding
+VITE_APP_TITLE=Sprintly AI
+VITE_APP_LOGO=/logo.svg
+```
+
+Notes:
+- Demo mode disables authentication. All features (CSV import, matching, settings) work without login.
+- AI and storage integrations are optional and disabled by default.
 
 ---
 

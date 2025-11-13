@@ -15,6 +15,13 @@
       "when": 1762800637197,
       "tag": "0001_amusing_clint_barton",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1763053886962,
+      "tag": "0002_slim_jack_power",
+      "breakpoints": true
     }
   ]
 }

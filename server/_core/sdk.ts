@@ -272,20 +272,15 @@ class SDKServer {
 
     // If user not in DB, sync from OAuth server automatically
     if (!user) {
-      try {
-        const userInfo = await this.getUserInfoWithJwt(sessionCookie ?? "");
-        await db.upsertUser({
-          openId: userInfo.openId,
-          name: userInfo.name || null,
-          email: userInfo.email ?? null,
-          loginMethod: userInfo.loginMethod ?? userInfo.platform ?? null,
-          lastSignedIn: signedInAt,
-        });
-        user = await db.getUserByOpenId(userInfo.openId);
-      } catch (error) {
-        console.error("[Auth] Failed to sync user from OAuth:", error);
-        throw ForbiddenError("Failed to sync user info");
-      }
+      // Local auth: create a minimal user record from the signed session
+      await db.upsertUser({
+        openId: session.openId,
+        name: session.name || null,
+        email: null,
+        loginMethod: "local",
+        lastSignedIn: signedInAt,
+      });
+      user = await db.getUserByOpenId(session.openId);
     }
 
     if (!user) {
