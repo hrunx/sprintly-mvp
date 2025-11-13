@@ -13,6 +13,7 @@ import { APP_LOGO, APP_TITLE } from "@/const";
 export default function Login() {
   const [, setLocation] = useLocation();
   const { isAuthenticated, loading } = useAuth();
+  const utils = trpc.useUtils();
 
   // Redirect if already logged in
   useEffect(() => {
@@ -20,6 +21,7 @@ export default function Login() {
       setLocation("/");
     }
   }, [isAuthenticated, loading, setLocation]);
+  
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
   const [registerEmail, setRegisterEmail] = useState("");
@@ -27,9 +29,13 @@ export default function Login() {
   const [registerName, setRegisterName] = useState("");
 
   const loginMutation = trpc.auth.login.useMutation({
-    onSuccess: () => {
+    onSuccess: async () => {
+      // Invalidate and refetch auth query to ensure user data is loaded
+      await utils.auth.me.invalidate();
+      await utils.auth.me.refetch();
       toast.success("Welcome back!");
-      setLocation("/");
+      // Small delay to ensure query completes before redirect
+      setTimeout(() => setLocation("/"), 100);
     },
     onError: (error) => {
       toast.error(error.message || "Login failed");
@@ -37,9 +43,13 @@ export default function Login() {
   });
 
   const registerMutation = trpc.auth.register.useMutation({
-    onSuccess: () => {
+    onSuccess: async () => {
+      // Invalidate and refetch auth query to ensure user data is loaded
+      await utils.auth.me.invalidate();
+      await utils.auth.me.refetch();
       toast.success("Account created successfully!");
-      setLocation("/");
+      // Small delay to ensure query completes before redirect
+      setTimeout(() => setLocation("/"), 100);
     },
     onError: (error) => {
       toast.error(error.message || "Registration failed");
