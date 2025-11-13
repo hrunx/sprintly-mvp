@@ -1,222 +1,255 @@
 # 🚀 Sprintly AI - Company-Investor Matchmaking Platform
 
-> **AI-Powered Matchmaking Platform** connecting companies seeking funding with the perfect investors through intelligent algorithms and network intelligence.
+> **AI-Powered Matchmaking Platform** connecting companies seeking funding with the perfect investors through intelligent algorithms, network intelligence, and no-code configuration.
 
 ![Dashboard](docs/images/01-dashboard.png)
+
+[![Live Demo](https://img.shields.io/badge/demo-live-brightgreen)](https://sprintly-mvp.manus.space)
+[![GitHub](https://img.shields.io/github/stars/hrunx/sprintly-mvp?style=social)](https://github.com/hrunx/sprintly-mvp)
+
+---
 
 ## 📋 Table of Contents
 
-- [Overview](#overview)
-- [Key Features](#key-features)
-- [Screenshots](#screenshots)
-- [Architecture](#architecture)
-- [Technology Stack](#technology-stack)
-- [Getting Started](#getting-started)
-- [Matching Algorithm](#matching-algorithm)
-- [API Documentation](#api-documentation)
-- [Database Schema](#database-schema)
-- [Deployment](#deployment)
-- [Contributing](#contributing)
+- [Overview](#-overview)
+- [Key Features](#-key-features)
+- [Screenshots](#-screenshots)
+- [Technology Stack](#-technology-stack)
+- [Architecture](#-architecture)
+- [Getting Started](#-getting-started)
+- [Matching Algorithm](#-matching-algorithm)
+- [API Documentation](#-api-documentation)
+- [Database Schema](#-database-schema)
+- [Deployment](#-deployment)
+- [Contributing](#-contributing)
+
+---
 
 ## 🎯 Overview
 
-Sprintly AI is a comprehensive matchmaking platform that uses artificial intelligence to connect companies seeking investment with the most suitable investors. The platform analyzes multiple factors including sector alignment, funding stage, geographic proximity, traction metrics, and investment thesis to generate high-quality matches.
+**Sprintly AI** solves the critical challenge of connecting startups with the right investors. Traditional matchmaking is manual, time-consuming, and often misses optimal connections. Our platform uses AI to analyze companies and investors across multiple dimensions, providing intelligent recommendations with detailed explanations.
 
-### Problem Statement
+### The Problem
 
-Traditional investor discovery is time-consuming, inefficient, and often relies on personal networks. Companies struggle to find investors who are genuinely interested in their sector, stage, and geography, while investors miss opportunities that perfectly match their investment criteria.
+- **Manual Matching**: Founders spend months researching investors
+- **Poor Fit**: 70% of intro requests go to wrong investors
+- **Hidden Connections**: Warm intro paths remain undiscovered
+- **No Transparency**: Founders don't understand why investors pass
 
-### Solution
+### Our Solution
 
-Sprintly AI automates the matching process using a sophisticated AI engine that considers:
-- **Sector Alignment**: Matches companies with investors focused on their industry
-- **Stage Fit**: Ensures funding stage aligns with investor preferences
-- **Geographic Proximity**: Considers location preferences and local market knowledge
-- **Traction Metrics**: Evaluates revenue, growth rate, and customer base
-- **Check Size Match**: Aligns funding needs with investor check sizes
-- **Thesis Alignment**: Analyzes pitch decks and investment theses for compatibility
+- ✅ **AI-Powered Matching**: Multi-factor scoring across 6 key dimensions
+- ✅ **Network Intelligence**: Discover warm intro paths automatically
+- ✅ **No-Code Configuration**: Adjust matching weights without technical knowledge
+- ✅ **Data Import**: Bulk import from LinkedIn, CRM systems
+- ✅ **Real-Time Preview**: See how configuration changes affect matches
+- ✅ **Pitch Deck Analysis**: AI extracts key metrics from PDFs automatically
+- ✅ **Intro Requests**: One-click introduction requests with tracking
+
+---
 
 ## ✨ Key Features
 
-### 1. **AI-Powered Matching Engine**
-- Multi-factor scoring algorithm with configurable weights
-- Real-time match score calculation (0-100%)
-- Detailed match explanations showing why companies and investors are compatible
-- Confidence scoring based on data quality
+### 🎯 **Smart Matching Engine**
 
-### 2. **No-Code Configuration UI**
+- **Multi-Factor Scoring**: Analyzes sector alignment, stage fit, geography, traction, check size, and thesis alignment
+- **Configurable Weights**: Adjust importance of each factor via intuitive sliders
+- **Real-Time Preview**: See match score changes as you adjust weights
+- **Detailed Explanations**: Understand *why* each match was recommended
 
-Adjust all matching parameters through an intuitive visual interface:
+![Live Match Preview](docs/images/settings-match-preview.png)
 
-- **Adjustable Matching Weights**: Control how much each factor contributes to the overall score
-  - Sector Alignment (default: 25%)
-  - Stage Fit (default: 20%)
-  - Geographic Proximity (default: 10%)
-  - Traction Metrics (default: 20%)
-  - Check Size Match (default: 15%)
-  - Thesis Alignment (default: 10%)
+### 🔗 **Network Intelligence & Intro Requests**
 
-- **Smart Filters**: Set minimum requirements for matching
-  - Minimum annual revenue
-  - Minimum team size
-  - Require pitch deck
-  - Require traction
+- **Intro Path Discovery**: Find warm introduction routes through mutual connections
+- **One-Click Requests**: Request introductions directly from match cards
+- **Notification System**: Alerts sent to mutual connections automatically
+- **Status Tracking**: Monitor intro request progress and success rates
 
-- **Preset Configurations**: Quick-start templates
-  - **Conservative**: High-quality matches only, strict criteria (70%+ threshold)
-  - **Balanced**: Good balance between quality and quantity (50%+ threshold)
-  - **Aggressive**: Maximum matches, lower thresholds (40%+ threshold)
+![Intro Requests](docs/images/matches-intro-request.png)
 
-- **Export/Import**: Save and share configurations as JSON files
+### 📊 **Data Import & CSV Processing**
 
-### 3. **Comprehensive Company Profiles**
-- Funding details (target, raised, valuation)
-- Traction metrics (revenue, growth, MRR, customers)
-- Business model and sector tags
-- Founder information with LinkedIn integration
-- Pitch deck storage and viewing
-- Top AI-recommended investor matches
+- **LinkedIn CSV Import**: Bulk upload companies and investors from LinkedIn exports
+- **Animated Processing**: Beautiful step-by-step visualization of data processing:
+  - Step 1: 📄 Reading CSV file...
+  - Step 2: 🔍 Validating data...
+  - Step 3: 🏗️ Structuring records...
+  - Step 4: 🤖 AI analyzing profiles...
+  - Step 5: 🎯 Generating matches...
+  - Step 6: ✅ Import complete!
+- **Auto-Validation**: Intelligent field mapping and error detection
+- **Sample Templates**: Download pre-formatted CSV templates
 
-### 4. **Investor Profiles**
-- Investment thesis and focus areas
-- Check size ranges and stage preferences
-- Geographic focus and sector expertise
-- Contact information and social links
-- Network connections visualization
+### 🔌 **Connections Hub**
 
-### 5. **Smart Dashboard**
-- Real-time statistics (companies, investors, matches)
-- Average match quality score
-- Quick actions for common tasks
-- Match quality visualization
+External data source integrations with beautiful status cards:
 
-### 6. **Advanced Search & Filtering**
-- Browse companies seeking funding
-- Filter by sector, stage, geography, traction
-- Search by company name or description
-- Sort by relevance, funding amount, or growth
+- ✅ **LinkedIn Integration**: Active CSV import for companies and investors
+- 🔜 **Gmail API** (Coming Soon): Email intelligence and intro path discovery
+- 🔜 **Google Drive** (Coming Soon): Automatic pitch deck analysis
+- 🔜 **Future Integrations**: Salesforce, HubSpot, AngelList, Crunchbase, PitchBook
 
-### 7. **Network Intelligence**
-- Visualize sector distribution
-- Analyze stage distribution
-- Track platform growth metrics
-- Identify trending sectors and stages
+![Connections Hub](docs/images/connections.png)
 
-### 8. **Match Management**
-- View all AI-recommended matches
-- See detailed score breakdowns for each match
-- Filter matches by minimum score
-- Track match status and outcomes
+### 📄 **AI Pitch Deck Analysis**
+
+- **PDF Upload**: Drag-and-drop pitch deck upload (max 10MB)
+- **AI Extraction**: Automatically extract key metrics from pitch decks
+- **Auto-Population**: Revenue, team size, market data populate automatically
+- **Smart Analysis**: Understand business model, traction, and competitive landscape
+
+![Pitch Deck Upload](docs/images/pitch-deck-upload.png)
+
+### 🎨 **No-Code Configuration**
+
+- **Visual Weight Adjustment**: Sliders for all matching signals (must total 100%)
+- **Filter Controls**: Set minimum thresholds for revenue, stage, geography
+- **Preset Configurations**: Conservative, Balanced, Aggressive presets
+- **Export/Import**: Save and share configurations as JSON
+- **Live Preview**: See real-time impact of weight changes on match scores
+
+### 📈 **Analytics Dashboard**
+
+- **Match Quality Metrics**: Track average match scores and confidence
+- **Network Growth**: Monitor companies, investors, and connections
+- **Sector Distribution**: Visualize industry breakdown
+- **Stage Analysis**: Track funding stage distribution
+
+![Dashboard](docs/images/dashboard.png)
+
+---
 
 ## 📸 Screenshots
 
-### Dashboard
-![Dashboard](docs/images/01-dashboard.png)
-*Main dashboard showing platform statistics, match quality metrics, and quick actions*
-
 ### Browse Companies
-![Browse Companies](docs/images/02-search.png)
+![Browse Companies](docs/images/browse-companies.png)
 *Search and filter companies seeking funding with advanced criteria*
 
-### Top Matches
-![Top Matches](docs/images/03-matches.png)
-*AI-recommended matches with detailed score breakdowns and explanations*
+### Top Matches with Intro Requests
+![Top Matches](docs/images/matches-intro-request.png)
+*AI-recommended matches with detailed score breakdowns and one-click intro requests*
 
-### Network Analytics
-![Network Analytics](docs/images/04-network.png)
+### Network Visualization
+![Network](docs/images/network.png)
 *Visualize sector and stage distribution, track platform metrics*
 
-### Settings - Matching Weights
-![Settings Weights](docs/images/05-settings-weights.png)
-*Adjust matching signal weights with intuitive sliders (must total 100%)*
+### Settings - Matching Weights with Live Preview
+![Settings Weights](docs/images/settings-match-preview.png)
+*Adjust matching signal weights with real-time preview of score changes*
 
 ### Settings - Filters
-![Settings Filters](docs/images/06-settings-filters.png)
+![Settings Filters](docs/images/settings-filters.png)
 *Set minimum requirements for companies to be included in matching*
 
-### Company Profile
-![Company Profile](docs/images/07-company-profile.png)
-*Detailed company information with funding details, traction metrics, and top investor matches*
+### Connections Hub
+![Connections Hub](docs/images/connections.png)
+*Manage external data source integrations (LinkedIn, Gmail, Google Drive)*
+
+### Company Profile with Pitch Deck Upload
+![Company Profile](docs/images/pitch-deck-upload.png)
+*Detailed company information with AI pitch deck analysis and top investor matches*
 
 ### Investor Profile
-![Investor Profile](docs/images/08-investor-profile.png)
+![Investor Profile](docs/images/investor-profile.png)
 *Investor profiles with investment thesis, focus areas, and network connections*
 
-## 🏗️ Architecture
+---
 
-### System Architecture
+## 🛠 Technology Stack
+
+### Frontend
+- **React 19** - Modern UI library with concurrent features
+- **TypeScript** - Type-safe development
+- **Tailwind CSS 4** - Utility-first styling with custom design system
+- **shadcn/ui** - High-quality, accessible component library
+- **tRPC** - End-to-end typesafe APIs
+- **Wouter** - Lightweight routing
+- **Lucide Icons** - Beautiful, consistent iconography
+
+### Backend
+- **Node.js 22** - JavaScript runtime
+- **Express 4** - Web application framework
+- **tRPC 11** - Type-safe API layer with automatic client generation
+- **Drizzle ORM** - Type-safe database toolkit
+- **MySQL/TiDB** - Relational database with horizontal scalability
+
+### AI & ML
+- **Built-in LLM Service** - For pitch deck analysis and semantic matching
+- **Custom Scoring Algorithm** - Multi-factor weighted matching engine
+
+### Infrastructure
+- **Vite** - Lightning-fast build tool
+- **TSX** - TypeScript execution environment
+- **PNPM** - Fast, disk-efficient package manager
+
+---
+
+## 🏗 Architecture
+
+### System Overview
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                         Frontend                             │
-│  React 19 + TypeScript + Tailwind CSS 4 + shadcn/ui        │
-│  - Dashboard, Search, Matches, Network, Settings            │
-│  - Company & Investor Profile Pages                         │
-│  - Real-time tRPC Client                                    │
-└─────────────────┬───────────────────────────────────────────┘
-                  │ tRPC (Type-safe API)
-┌─────────────────┴───────────────────────────────────────────┐
-│                         Backend                              │
-│  Express 4 + tRPC 11 + TypeScript                          │
-│  - Company Management API                                    │
-│  - Investor Management API                                   │
-│  - Matching Engine API                                       │
-│  - Analytics API                                             │
-│  - Settings API                                              │
-└─────────────────┬───────────────────────────────────────────┘
-                  │ Drizzle ORM
-┌─────────────────┴───────────────────────────────────────────┐
-│                        Database                              │
-│  MySQL / TiDB                                               │
-│  - companies, investors, matches                            │
-│  - matchingConfig, users                                     │
-└─────────────────────────────────────────────────────────────┘
+│                        Frontend (React)                      │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐   │
+│  │Dashboard │  │ Matches  │  │ Settings │  │  Import  │   │
+│  └────┬─────┘  └────┬─────┘  └────┬─────┘  └────┬─────┘   │
+└───────┼─────────────┼─────────────┼─────────────┼──────────┘
+        │             │             │             │
+        └─────────────┴─────────────┴─────────────┘
+                      │
+              ┌───────▼───────┐
+              │  tRPC Client  │
+              └───────┬───────┘
+                      │
+┌─────────────────────▼─────────────────────────────────────┐
+│                   Backend (Express + tRPC)                 │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐ │
+│  │Companies │  │ Investors│  │ Matching │  │  Import  │ │
+│  │  Router  │  │  Router  │  │  Router  │  │  Router  │ │
+│  └────┬─────┘  └────┬─────┘  └────┬─────┘  └────┬─────┘ │
+└───────┼─────────────┼─────────────┼─────────────┼────────┘
+        │             │             │             │
+        └─────────────┴─────────────┴─────────────┘
+                      │
+              ┌───────▼───────┐
+              │  Database     │
+              │  (MySQL/TiDB) │
+              └───────────────┘
 ```
 
-### Data Flow
+### Matching Algorithm Flow
 
 ```
-User Action → tRPC Client → Backend Router → Database Helper → Database
-                ↓
-          Type-safe Response → UI Update
+Company + Investor
+       ↓
+┌──────────────────┐
+│  Factor Analysis │
+├──────────────────┤
+│ • Sector (25%)   │
+│ • Stage (20%)    │
+│ • Traction (20%) │
+│ • Check Size(15%)│
+│ • Geography(10%) │
+│ • Thesis (10%)   │
+└────────┬─────────┘
+         ↓
+   Weighted Score
+    (0-100%)
+         ↓
+   Match Quality
 ```
 
-## 🛠️ Technology Stack
-
-### Frontend
-- **React 19**: Latest React with concurrent features
-- **TypeScript**: Type-safe development
-- **Tailwind CSS 4**: Utility-first styling
-- **shadcn/ui**: High-quality UI components
-- **tRPC React**: Type-safe API client
-- **Wouter**: Lightweight routing
-- **Lucide React**: Beautiful icons
-- **Sonner**: Toast notifications
-
-### Backend
-- **Node.js 22**: Latest LTS runtime
-- **Express 4**: Web server framework
-- **tRPC 11**: End-to-end type-safe APIs
-- **Drizzle ORM**: Type-safe database toolkit
-- **Zod**: Schema validation
-- **SuperJSON**: Enhanced JSON serialization
-
-### Database
-- **MySQL / TiDB**: Relational database
-- **Drizzle Kit**: Schema migrations
-
-### Development Tools
-- **Vite**: Fast build tool
-- **TSX**: TypeScript execution
-- **pnpm**: Fast package manager
+---
 
 ## 🚀 Getting Started
 
 ### Prerequisites
 
-- Node.js 22+ installed
-- MySQL or TiDB database
-- pnpm package manager
+- **Node.js** 22+ ([Download](https://nodejs.org/))
+- **PNPM** 9+ (`npm install -g pnpm`)
+- **MySQL** 8+ or **TiDB** ([Setup Guide](https://docs.pingcap.com/tidb/stable))
 
 ### Installation
 
@@ -231,9 +264,12 @@ User Action → tRPC Client → Backend Router → Database Helper → Database
    pnpm install
    ```
 
-3. **Set up environment variables**
+3. **Configure environment variables**
+   ```bash
+   cp .env.example .env
+   ```
    
-   Create a `.env` file in the root directory:
+   Edit `.env` with your database credentials:
    ```env
    DATABASE_URL=mysql://user:password@localhost:3306/sprintly
    JWT_SECRET=your-secret-key-here
@@ -241,63 +277,31 @@ User Action → tRPC Client → Backend Router → Database Helper → Database
    VITE_APP_LOGO=/logo.svg
    ```
 
-4. **Initialize the database**
+4. **Initialize database**
    ```bash
    pnpm db:push
    ```
 
-5. **Seed with mock data**
+5. **Seed mock data** (optional)
    ```bash
    npx tsx scripts/seed-company-data.ts
    ```
-   This will generate:
+   This generates:
    - 50 realistic companies seeking funding
    - 80 investors with investment criteria
    - 150 AI-generated matches
 
-6. **Start the development server**
+6. **Start development server**
    ```bash
    pnpm dev
    ```
 
-7. **Open your browser**
-   
-   Navigate to `http://localhost:3000`
+7. **Open in browser**
+   ```
+   http://localhost:3000
+   ```
 
-### Project Structure
-
-```
-sprintly-mvp/
-├── client/                 # Frontend application
-│   ├── public/            # Static assets
-│   ├── src/
-│   │   ├── components/    # Reusable UI components
-│   │   │   ├── ui/       # shadcn/ui components
-│   │   │   └── DashboardLayout.tsx
-│   │   ├── pages/         # Page components
-│   │   │   ├── Dashboard.tsx
-│   │   │   ├── Search.tsx
-│   │   │   ├── Matches.tsx
-│   │   │   ├── Network.tsx
-│   │   │   ├── Settings.tsx
-│   │   │   ├── CompanyProfile.tsx
-│   │   │   └── InvestorProfile.tsx
-│   │   ├── lib/           # Utility functions
-│   │   │   └── trpc.ts   # tRPC client
-│   │   └── App.tsx        # Main app component
-│   └── index.html         # HTML entry point
-├── server/                # Backend application
-│   ├── _core/            # Core server functionality
-│   ├── db.ts             # Database queries
-│   └── routers.ts        # tRPC routers
-├── drizzle/              # Database schema
-│   └── schema.ts         # Table definitions
-├── scripts/              # Utility scripts
-│   └── seed-company-data.ts  # Mock data generator
-├── docs/                 # Documentation
-│   └── images/           # Screenshots
-└── README.md             # This file
-```
+---
 
 ## 🧮 Matching Algorithm
 
@@ -327,228 +331,233 @@ matchScore = (
 ) / 100
 ```
 
-Scores range from 0-100, with:
-- **80-100**: Excellent match
-- **70-79**: Strong match  
-- **60-69**: Good match
-- **Below 60**: Weak match
+**Score Interpretation:**
+- **90-100**: Excellent Match (Strong recommendation)
+- **75-89**: Good Match (Recommended)
+- **60-74**: Fair Match (Consider with caution)
+- **<60**: Poor Match (Not recommended)
 
 ### Adjustable Configuration
 
-All weights and filters are adjustable through the Settings UI:
+All weights are adjustable through the Settings UI with **real-time preview**:
 - **Weights**: Sliders to adjust importance of each factor (must total 100%)
 - **Filters**: Minimum thresholds (revenue, team size, pitch deck required, etc.)
-- **Presets**: Quick configurations for different matching strategies
+- **Presets**: Quick configurations (Conservative, Balanced, Aggressive)
+- **Live Preview**: See how weight changes affect actual match scores
+
+---
 
 ## 📡 API Documentation
 
-The platform uses tRPC for type-safe API calls. All endpoints are automatically typed end-to-end.
+### tRPC Routers
 
-### Companies Router
+#### Companies
 
 ```typescript
-// Get all companies with optional filters
-trpc.companies.list.useQuery({
-  sector?: string,
-  stage?: string,
-  location?: string,
-  minRevenue?: number,
-  limit?: number
-})
+// Get all companies
+const companies = await trpc.companies.list.useQuery();
 
-// Get single company by ID
-trpc.companies.byId.useQuery({ id: number })
+// Get company by ID
+const company = await trpc.companies.getById.useQuery({ id: 1 });
 
 // Search companies
-trpc.companies.search.useQuery({ query: string })
+const results = await trpc.companies.search.useQuery({
+  query: 'AI',
+  sector: 'Fintech',
+  stage: 'Seed'
+});
 ```
 
-### Investors Router
+#### Investors
 
 ```typescript
 // Get all investors
-trpc.investors.list.useQuery()
+const investors = await trpc.investors.list.useQuery();
 
-// Get single investor by ID
-trpc.investors.byId.useQuery({ id: number })
+// Get investor by ID
+const investor = await trpc.investors.getById.useQuery({ id: 1 });
 ```
 
-### Matches Router
+#### Matches
 
 ```typescript
-// Get all matches with optional filters
-trpc.matches.list.useQuery({
-  companyId?: number,
-  investorId?: number,
-  minScore?: number,
-  limit?: number
-})
-
-// Get matches with full details
-trpc.matches.withDetails.useQuery({ id: number })
+// Get matches for a company
+const matches = await trpc.matches.getForCompany.useQuery({
+  companyId: 1,
+  limit: 10
+});
 ```
 
-### Analytics Router
+#### Intro Requests
 
 ```typescript
-// Get platform analytics
-trpc.analytics.overview.useQuery()
-// Returns: { totalCompanies, totalInvestors, totalMatches, avgMatchScore }
+// Request introduction
+const intro = await trpc.intros.request.useMutation({
+  companyId: 1,
+  investorId: 20,
+  message: 'Would love an intro to discuss our Series A'
+});
 
-// Get sector distribution
-trpc.analytics.sectorDistribution.useQuery()
-
-// Get stage distribution
-trpc.analytics.stageDistribution.useQuery()
+// Get intro requests
+const requests = await trpc.intros.list.useQuery({ companyId: 1 });
 ```
 
-### Settings Router
+#### Settings
 
 ```typescript
-// Get current matching configuration
-trpc.settings.getMatchingConfig.useQuery()
+// Get current configuration
+const config = await trpc.settings.get.useQuery();
 
-// Update matching configuration
-trpc.settings.saveMatchingConfig.useMutation({
-  weights: { sector, stage, traction, checkSize, geo, thesis },
-  filters: { minRevenue, minTeamSize, requirePitchDeck, requireTraction },
-  thresholds: { minMatchScore, minSectorScore, minStageScore }
-})
-
-// Apply preset configuration
-trpc.settings.applyPreset.useMutation({
-  preset: 'conservative' | 'balanced' | 'aggressive'
-})
-
-// Export configuration
-trpc.settings.exportConfig.useQuery()
-
-// Import configuration
-trpc.settings.importConfig.useMutation({ config: string })
+// Update configuration
+await trpc.settings.update.useMutation({
+  weights: { sector: 30, stage: 25, traction: 20, checkSize: 15, geo: 5, thesis: 5 },
+  filters: { minRevenue: 1000000, requirePitchDeck: true }
+});
 ```
 
-## 🗄️ Database Schema
+#### Data Import
 
-### Companies Table
-Stores information about companies seeking investment.
+```typescript
+// Import companies from CSV
+const result = await trpc.dataImport.importCompanies.useMutation({
+  csvContent: '...',
+  validateOnly: false
+});
 
-| Column | Type | Description |
-|--------|------|-------------|
-| `id` | INT | Primary key |
-| `name` | VARCHAR(255) | Company name |
-| `description` | TEXT | Company description |
-| `sector` | VARCHAR(100) | Industry sector |
-| `stage` | VARCHAR(50) | Funding stage |
-| `geography` | VARCHAR(100) | Location |
-| `fundingTarget` | INT | Amount seeking (USD) |
-| `fundingRaised` | INT | Amount raised (USD) |
-| `valuation` | INT | Company valuation (USD) |
-| `revenue` | INT | Annual revenue (USD) |
-| `revenueGrowth` | INT | Growth rate (%) |
-| `mrr` | INT | Monthly recurring revenue |
-| `customers` | INT | Number of customers |
-| `teamSize` | INT | Number of employees |
-| `founded` | INT | Year founded |
-| `pitchDeckUrl` | VARCHAR(500) | Pitch deck URL |
-| `founderName` | VARCHAR(255) | Founder name |
-| `founderEmail` | VARCHAR(255) | Founder email |
+// Import investors from CSV
+const result = await trpc.dataImport.importInvestors.useMutation({
+  csvContent: '...',
+  validateOnly: false
+});
+```
 
-### Investors Table
-Stores information about investors and their criteria.
+---
 
-| Column | Type | Description |
-|--------|------|-------------|
-| `id` | INT | Primary key |
-| `name` | VARCHAR(255) | Investor name |
-| `title` | VARCHAR(100) | Job title |
-| `firm` | VARCHAR(255) | Investment firm |
-| `type` | VARCHAR(50) | VC, Angel, PE, etc. |
-| `focusSectors` | TEXT | Preferred sectors (JSON) |
-| `focusStages` | TEXT | Preferred stages (JSON) |
-| `focusGeographies` | TEXT | Geographic focus (JSON) |
-| `checkSizeMin` | INT | Minimum investment (USD) |
-| `checkSizeMax` | INT | Maximum investment (USD) |
-| `thesis` | TEXT | Investment thesis |
-| `bio` | TEXT | Investor biography |
-| `email` | VARCHAR(255) | Contact email |
-| `linkedin` | VARCHAR(500) | LinkedIn URL |
-| `website` | VARCHAR(500) | Website URL |
+## 🗄 Database Schema
 
-### Matches Table
-Stores AI-generated matches between companies and investors.
+### Core Tables
 
-| Column | Type | Description |
-|--------|------|-------------|
-| `id` | INT | Primary key |
-| `companyId` | INT | Foreign key to companies |
-| `investorId` | INT | Foreign key to investors |
-| `score` | INT | Overall match score (0-100) |
-| `sectorScore` | INT | Sector alignment score |
-| `stageScore` | INT | Stage fit score |
-| `geographyScore` | INT | Geography score |
-| `tractionScore` | INT | Traction score |
-| `checkSizeScore` | INT | Check size score |
-| `thesisScore` | INT | Thesis alignment score |
-| `explanation` | TEXT | Why this match works |
-| `matchReasons` | TEXT | Detailed reasons (JSON) |
-| `confidence` | INT | Match confidence (0-100) |
+**companies**
+- `id`, `name`, `description`, `website`
+- `sector`, `stage`, `location`, `founded`, `teamSize`
+- `businessModel`, `fundingRound`, `seeking`, `alreadyRaised`, `valuation`
+- `annualRevenue`, `revenueGrowth`, `customers`, `mrr`
+- `founderName`, `founderEmail`, `founderLinkedIn`
+- `pitchDeckUrl`, `createdAt`, `updatedAt`
 
-### MatchingConfig Table
-Stores user-specific matching configurations.
+**investors**
+- `id`, `name`, `type`, `firm`, `bio`
+- `sector`, `stage`, `geography`
+- `checkSizeMin`, `checkSizeMax`
+- `email`, `linkedIn`, `website`
+- `createdAt`, `updatedAt`
 
-| Column | Type | Description |
-|--------|------|-------------|
-| `id` | INT | Primary key |
-| `userId` | INT | Foreign key to users |
-| `weights` | TEXT | Weight configuration (JSON) |
-| `filters` | TEXT | Filter configuration (JSON) |
-| `thresholds` | TEXT | Threshold configuration (JSON) |
+**matches**
+- `id`, `companyId`, `investorId`
+- `overallScore`, `sectorScore`, `stageScore`, `geoScore`
+- `tractionScore`, `checkSizeScore`, `thesisScore`
+- `matchReasons`, `createdAt`
+
+**introRequests**
+- `id`, `companyId`, `investorId`, `requesterId`
+- `status`, `message`, `createdAt`, `updatedAt`
+
+**matchingConfig**
+- `id`, `userId`, `name`
+- `sectorWeight`, `stageWeight`, `geoWeight`
+- `tractionWeight`, `checkSizeWeight`, `thesisWeight`
+- `filters`, `thresholds`
+- `createdAt`, `updatedAt`
+
+---
 
 ## 🚢 Deployment
 
-### Deploy to Manus Platform
+### Production Build
 
-1. **Save a checkpoint**
-   - Checkpoints are created through the Management UI
-   - Click "Save Checkpoint" in the dashboard
+```bash
+# Build frontend and backend
+pnpm build
 
-2. **Publish to production**
-   - Click the **Publish** button in the Management UI
-   - Your app will be deployed with auto-scaling, SSL, and CDN
-   - Get a custom domain: `your-app.manus.space`
-
-3. **Custom domain** (optional)
-   - Go to Settings → Domains in the Management UI
-   - Add your custom domain and configure DNS
+# Start production server
+pnpm start
+```
 
 ### Environment Variables
 
-Update these in Settings → Secrets (Management UI):
-- `VITE_APP_TITLE` - Change application branding
-- Add any custom API keys for external services
+**Required for production:**
+```env
+NODE_ENV=production
+DATABASE_URL=mysql://user:password@host:port/database
+JWT_SECRET=your-production-secret
+VITE_APP_TITLE=Sprintly AI
+VITE_APP_LOGO=/logo.svg
+```
+
+### Docker Deployment
+
+```dockerfile
+FROM node:22-alpine
+WORKDIR /app
+COPY package.json pnpm-lock.yaml ./
+RUN npm install -g pnpm && pnpm install --frozen-lockfile
+COPY . .
+RUN pnpm build
+EXPOSE 3000
+CMD ["pnpm", "start"]
+```
+
+```bash
+docker build -t sprintly-mvp .
+docker run -p 3000:3000 --env-file .env sprintly-mvp
+```
+
+---
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please follow these steps:
+We welcome contributions! Please follow these steps:
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+1. **Fork the repository**
+2. **Create a feature branch** (`git checkout -b feature/amazing-feature`)
+3. **Commit your changes** (`git commit -m 'Add amazing feature'`)
+4. **Push to the branch** (`git push origin feature/amazing-feature`)
+5. **Open a Pull Request**
+
+### Development Guidelines
+
+- Follow TypeScript best practices
+- Use Tailwind CSS for styling
+- Write meaningful commit messages
+- Add tests for new features
+- Update documentation
+
+---
 
 ## 📝 License
 
-This project is licensed under the MIT License.
+This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
+
+---
 
 ## 🙏 Acknowledgments
 
-- Built with [Manus Platform](https://manus.im) for rapid full-stack development
-- UI components from [shadcn/ui](https://ui.shadcn.com/)
-- Icons from [Lucide](https://lucide.dev/)
+- **shadcn/ui** for beautiful, accessible components
+- **tRPC** for type-safe APIs
+- **Drizzle ORM** for elegant database interactions
+- **Manus Platform** for infrastructure and AI services
+
+---
 
 ## 📧 Contact
 
-For questions or support, please open an issue on GitHub.
+**Hrun Shafquat**
+- Email: h.shafquat@gasable.com
+- GitHub: [@hrunx](https://github.com/hrunx)
+- Project: [https://github.com/hrunx/sprintly-mvp](https://github.com/hrunx/sprintly-mvp)
 
-**Repository**: https://github.com/hrunx/sprintly-mvp
+---
+
+<div align="center">
+  <strong>Built with ❤️ for founders and investors</strong>
+</div>
