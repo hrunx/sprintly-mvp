@@ -8,6 +8,7 @@ import { Progress } from "@/components/ui/progress";
 import { trpc } from "@/lib/trpc";
 import { Upload, Download, FileText, CheckCircle2, XCircle, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
+import { ProcessingModal } from "@/components/ProcessingModal";
 
 export default function DataImport() {
   const [activeTab, setActiveTab] = useState<"companies" | "investors">("companies");
@@ -15,6 +16,7 @@ export default function DataImport() {
   const [parsedData, setParsedData] = useState<any>(null);
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState<any>(null);
+  const [showProcessing, setShowProcessing] = useState(false);
 
   const parseCompaniesMutation = trpc.import.parseCompaniesCSV.useMutation();
   const parseInvestorsMutation = trpc.import.parseInvestorsCSV.useMutation();
@@ -69,6 +71,7 @@ export default function DataImport() {
     }
 
     setImporting(true);
+    setShowProcessing(true);
     try {
       if (activeTab === "companies") {
         const result = await importCompaniesMutation.mutateAsync({
@@ -92,7 +95,7 @@ export default function DataImport() {
     } catch (error: any) {
       toast.error(error.message || "Failed to import data");
     } finally {
-      setImporting(false);
+      // Keep modal open until animation completes
     }
   };
 
@@ -454,6 +457,16 @@ export default function DataImport() {
           </CardContent>
         </Card>
       )}
+      {/* Processing Modal */}
+      <ProcessingModal
+        open={showProcessing}
+        onComplete={() => {
+          setShowProcessing(false);
+          setImporting(false);
+        }}
+        type={activeTab}
+        count={parsedData?.[activeTab === "companies" ? "companies" : "investors"]?.length || 0}
+      />
     </div>
   );
 }

@@ -12,6 +12,7 @@ import Network from "./pages/Network";
 import InvestorProfile from "./pages/InvestorProfile";
 import Settings from "./pages/Settings";
 import DataImport from "./pages/DataImport";
+import Connections from "./pages/Connections";
 import CompanyProfile from "./pages/CompanyProfile";
 
 function Router() {
@@ -25,6 +26,7 @@ function Router() {
       <Route path="/company/:id" component={() => <DashboardLayout><CompanyProfile /></DashboardLayout>} />
       <Route path="/settings" component={() => <DashboardLayout><Settings /></DashboardLayout>} />
       <Route path="/import" component={() => <DashboardLayout><DataImport /></DashboardLayout>} />
+      <Route path="/connections" component={() => <DashboardLayout><Connections /></DashboardLayout>} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>
