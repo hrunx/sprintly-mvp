@@ -4,7 +4,9 @@ import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { z } from "zod";
 import { getDb } from "./db";
-import { companies, investors } from "../drizzle/schema";
+import { eq, desc } from "drizzle-orm";
+import { TRPCError } from "@trpc/server";
+import { companies, investors, introRequests, matches, connections } from "../drizzle/schema";
 
 export const appRouter = router({
   import: router({
@@ -388,6 +390,62 @@ export const appRouter = router({
       .query(async ({ input }) => {
         // Return empty for now - connections not implemented yet
         return [];
+      }),
+  }),
+
+  introRequests: router({
+    create: protectedProcedure
+      .input(z.object({
+        companyId: z.number(),
+        investorId: z.number(),
+        connectionId: z.number().optional(),
+        message: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not available" });
+
+        await db.insert(introRequests).values({
+          companyId: input.companyId,
+          investorId: input.investorId,
+          requestedBy: ctx.user.id,
+          connectionId: input.connectionId,
+          message: input.message,
+          status: "pending",
+        });
+
+        return { success: true, message: "Introduction request sent!" };
+      }),
+
+    list: protectedProcedure
+      .query(async ({ ctx }) => {
+        const db = await getDb();
+        if (!db) return [];
+
+        const requests = await db
+          .select()
+          .from(introRequests)
+          .where(eq(introRequests.requestedBy, ctx.user.id))
+          .orderBy(desc(introRequests.createdAt));
+
+        return requests;
+      }),
+
+    updateStatus: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        status: z.enum(["pending", "accepted", "declined", "completed"]),
+      }))
+      .mutation(async ({ input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not available" });
+
+        await db
+          .update(introRequests)
+          .set({ status: input.status, updatedAt: new Date() })
+          .where(eq(introRequests.id, input.id));
+
+        return { success: true };
       }),
   }),
 });

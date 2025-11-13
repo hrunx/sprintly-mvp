@@ -83,3 +83,11 @@
 - [x] Integrate processing modal into CSV import workflow
 - [x] Add smooth transitions and loading animations
 - [x] Show AI analysis and matching generation steps
+
+## Next Steps Implementation
+- [x] Add real-time match preview in Settings showing before/after weight adjustments
+- [x] Build intro request workflow with notification system
+- [x] Implement pitch deck PDF upload feature
+- [x] Add AI extraction for pitch deck metrics
+- [ ] Update README with all new features and screenshots
+- [ ] Push all changes to GitHub repository

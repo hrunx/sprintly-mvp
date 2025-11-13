@@ -20,6 +20,7 @@ import {
   Briefcase,
 } from "lucide-react";
 import { useRoute } from "wouter";
+import { PitchDeckUpload } from "@/components/PitchDeckUpload";
 
 export default function CompanyProfile() {
   const [, params] = useRoute("/company/:id");
@@ -221,6 +222,9 @@ export default function CompanyProfile() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Pitch Deck Upload */}
+      <PitchDeckUpload companyId={companyId} />
 
       {/* Founder Information */}
       {company.founderName && (

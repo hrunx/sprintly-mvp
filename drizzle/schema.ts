@@ -233,6 +233,21 @@ export const legacyMatches = mysqlTable("legacy_matches", {
 export type Match = typeof matches.$inferSelect;
 export type InsertMatch = typeof matches.$inferInsert;
 
+export const introRequests = mysqlTable("introRequests", {
+  id: int("id").autoincrement().primaryKey(),
+  companyId: int("companyId").notNull(),
+  investorId: int("investorId").notNull(),
+  requestedBy: int("requestedBy").notNull(), // user ID
+  connectionId: int("connectionId"), // ID of mutual connection who can make intro
+  status: mysqlEnum("status", ["pending", "accepted", "declined", "completed"]).default("pending").notNull(),
+  message: text("message"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type IntroRequest = typeof introRequests.$inferSelect;
+export type InsertIntroRequest = typeof introRequests.$inferInsert;
+
 /**
  * User-created lists for campaigns
  */

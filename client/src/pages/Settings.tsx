@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
+import { MatchPreview } from "@/components/MatchPreview";
 
 interface MatchingConfig {
   weights: {
@@ -278,6 +279,9 @@ export default function Settings() {
           </CardContent>
         </Card>
       )}
+
+      {/* Live Match Preview */}
+      <MatchPreview config={config} />
 
       <Tabs defaultValue="weights" className="space-y-6">
         <TabsList className="grid w-full grid-cols-4">

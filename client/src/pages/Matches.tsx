@@ -1,4 +1,5 @@
 import { trpc } from "@/lib/trpc";
+import { toast } from "sonner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -12,6 +13,7 @@ import {
   Sparkles,
   ExternalLink,
   ArrowRight,
+  Send,
 } from "lucide-react";
 import { useState } from "react";
 import {
@@ -37,6 +39,18 @@ export default function Matches() {
   const { data: investors } = trpc.investors.list.useQuery({
     limit: 200,
   });
+
+  const requestIntroMutation = trpc.introRequests.create.useMutation();
+
+  const handleRequestIntro = async (e: React.MouseEvent, companyId: number, investorId: number) => {
+    e.stopPropagation();
+    try {
+      await requestIntroMutation.mutateAsync({ companyId, investorId });
+      toast.success("Introduction request sent!");
+    } catch (error) {
+      toast.error("Failed to send introduction request");
+    }
+  };
 
   // Create a map of investor data for quick lookup
   const investorMap = new Map(investors?.map((inv) => [inv.id, inv]));
@@ -247,10 +261,21 @@ export default function Matches() {
                       <Badge className={getScoreColor(match.score)}>
                         {getScoreLabel(match.score)}
                       </Badge>
-                      <Button size="sm" variant="outline" className="mt-2">
-                        View Profile
-                        <ArrowRight className="h-4 w-4 ml-1" />
-                      </Button>
+                      <div className="flex flex-col gap-2 mt-2">
+                        <Button size="sm" variant="outline">
+                          View Profile
+                          <ArrowRight className="h-4 w-4 ml-1" />
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="default"
+                          onClick={(e) => handleRequestIntro(e, selectedCompany, investor.id)}
+                          disabled={requestIntroMutation.isPending}
+                        >
+                          <Send className="h-4 w-4 mr-1" />
+                          Request Intro
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </CardContent>
