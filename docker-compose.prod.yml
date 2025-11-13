@@ -10,7 +10,9 @@ services:
       - NODE_ENV=production
       - PORT=3000
     depends_on:
-      - mysql
+      mysql:
+        condition: service_healthy
+    command: sh -lc "pnpm exec drizzle-kit migrate && pnpm start"
     networks:
       - sprintly
 
@@ -28,6 +30,11 @@ services:
       MYSQL_PASSWORD: sprintly
     volumes:
       - mysql_prod_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-proot"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
     networks:
       - sprintly
 
