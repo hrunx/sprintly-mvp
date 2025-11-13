@@ -15,11 +15,9 @@ import {
   ArrowLeft,
   Network,
 } from "lucide-react";
-import { useLocation } from "wouter";
 
 export default function InvestorProfile() {
   const [, params] = useRoute("/investor/:id");
-  const [, setLocation] = useLocation();
   const investorId = params?.id ? parseInt(params.id) : 0;
 
   const { data: investor, isLoading } = trpc.investors.byId.useQuery({ id: investorId });
@@ -40,7 +38,7 @@ export default function InvestorProfile() {
   if (!investor) {
     return (
       <div className="space-y-6">
-        <Button variant="ghost" onClick={() => setLocation("/search")}>
+        <Button variant="ghost" onClick={() => window.history.back()}>
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to Search
         </Button>
@@ -59,7 +57,7 @@ export default function InvestorProfile() {
   return (
     <div className="space-y-6">
       {/* Back Button */}
-      <Button variant="ghost" onClick={() => setLocation("/search")}>
+      <Button variant="ghost" onClick={() => window.history.back()}>
         <ArrowLeft className="h-4 w-4 mr-2" />
         Back to Search
       </Button>

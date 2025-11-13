@@ -107,3 +107,16 @@
 - [x] Create LOCAL_DEPLOYMENT.md guide with setup instructions
 - [x] Docker Compose configuration already exists
 - [ ] Push local2 branch to GitHub (requires re-authentication)
+
+## Bug Fixes (Authentication)
+- [ ] Fix authentication redirect loop - users see sign-in screen after successful login
+- [ ] Investigate cookie persistence and session handling
+- [ ] Ensure trpc.auth.me.useQuery() properly detects authenticated user
+
+## Route Audit and Fixes
+- [x] Audit all route definitions in App.tsx
+- [x] Fix Dashboard.tsx to use Link component for client-side navigation
+- [x] Fix Search.tsx to use Link for company profile navigation
+- [x] Fix InvestorProfile back button to use browser history
+- [x] Test all navigation flows (dashboard, search, profiles)
+- [ ] Push local2 branch to GitHub

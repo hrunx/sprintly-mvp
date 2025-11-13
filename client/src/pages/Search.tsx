@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Search as SearchIcon, Building2, MapPin, TrendingUp, DollarSign, ExternalLink } from "lucide-react";
+import { Link } from "wouter";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
@@ -242,7 +243,7 @@ export default function Search() {
 
                         <div className="flex gap-2 mt-4">
                           <Button size="sm" asChild>
-                            <a href={`/company/${company.id}`}>View Profile</a>
+                            <Link href={`/company/${company.id}`}>View Profile</Link>
                           </Button>
                           {company.website && (
                             <Button size="sm" variant="outline" asChild>
