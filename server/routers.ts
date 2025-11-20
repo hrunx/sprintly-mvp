@@ -8,7 +8,12 @@ import { eq, desc } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { companies, investors, introRequests, matches, connections } from "../drizzle/schema";
 import { sdk } from "./_core/sdk";
-import { normalizeCompanyRecord, normalizeInvestorRecord } from "./_core/importUtils";
+import {
+  normalizeCompanyRecord,
+  normalizeInvestorRecord,
+  getCompanyDedupKeys,
+  getInvestorDedupKeys,
+} from "./_core/importUtils";
 import { generateMatchesForCompany, generateMatchesForInvestor } from "./_core/matchingExecutor";
 import { getCsvLines, splitCsvLine } from "./_core/csvParser";
 
@@ -152,14 +157,43 @@ export const appRouter = router({
       .mutation(async ({ input }) => {
         const db = await getDb();
         if (!db) throw new Error('Database not available');
+        const existingCompanies = await db
+          .select({
+            name: companies.name,
+            websiteUrl: companies.websiteUrl,
+            founderEmail: companies.founderEmail,
+            founderLinkedin: companies.founderLinkedin,
+          })
+          .from(companies);
         
         let imported = 0;
         const errors = [];
         let matchesGenerated = 0;
         const investorsCache = await listAllInvestors();
+        const knownCompanyKeys = new Set<string>();
+        const batchKeys = new Set<string>();
+
+        existingCompanies.forEach(existing => {
+          getCompanyDedupKeys(existing).forEach(key => knownCompanyKeys.add(key));
+        });
         
         for (const company of input.companies) {
           try {
+            const dedupKeys = getCompanyDedupKeys(company);
+            const isDuplicate =
+              dedupKeys.some(key => knownCompanyKeys.has(key)) ||
+              dedupKeys.some(key => batchKeys.has(key));
+
+            if (isDuplicate) {
+              errors.push({
+                company: company.name,
+                error: "Duplicate company detected. Skipping import.",
+              });
+              continue;
+            }
+
+            dedupKeys.forEach(key => batchKeys.add(key));
+
             await db.insert(companies).values({
               ...company,
               businessModel: company.businessModel || 'B2B SaaS',
@@ -168,6 +202,8 @@ export const appRouter = router({
               confidence: 85
             });
             imported++;
+
+            dedupKeys.forEach(key => knownCompanyKeys.add(key));
             
             const [inserted] = await db
               .select()
@@ -198,20 +234,52 @@ export const appRouter = router({
       .mutation(async ({ input }) => {
         const db = await getDb();
         if (!db) throw new Error('Database not available');
+        const existingInvestors = await db
+          .select({
+            name: investors.name,
+            firm: investors.firm,
+            email: investors.email,
+            linkedinUrl: investors.linkedinUrl,
+            websiteUrl: investors.websiteUrl,
+          })
+          .from(investors);
         
         let imported = 0;
         const errors = [];
         let matchesGenerated = 0;
         const companiesCache = await listAllCompanies();
+        const knownInvestorKeys = new Set<string>();
+        const batchInvestorKeys = new Set<string>();
+
+        existingInvestors.forEach(existing => {
+          getInvestorDedupKeys(existing).forEach(key => knownInvestorKeys.add(key));
+        });
         
         for (const investor of input.investors) {
           try {
+            const dedupKeys = getInvestorDedupKeys(investor);
+            const isDuplicate =
+              dedupKeys.some(key => knownInvestorKeys.has(key)) ||
+              dedupKeys.some(key => batchInvestorKeys.has(key));
+
+            if (isDuplicate) {
+              errors.push({
+                investor: investor.name,
+                error: "Duplicate investor detected. Skipping import.",
+              });
+              continue;
+            }
+
+            dedupKeys.forEach(key => batchInvestorKeys.add(key));
+
             await db.insert(investors).values({
               ...investor,
               type: 'VC',
               confidence: 85
             });
             imported++;
+
+            dedupKeys.forEach(key => knownInvestorKeys.add(key));
             
             const [inserted] = await db
               .select()

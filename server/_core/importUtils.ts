@@ -1,4 +1,4 @@
-import { InsertCompany, InsertInvestor } from "../../drizzle/schema";
+import { InsertCompany, InsertInvestor, Company, Investor } from "../../drizzle/schema";
 
 const STAGE_NORMALIZATION_MAP: Record<string, string> = {
   "pre seed": "Pre-seed",
@@ -85,6 +85,73 @@ function capitalizeWords(value: string): string {
     .split(" ")
     .map(word => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ");
+}
+
+function normalizeIdentifier(value: unknown): string | null {
+  const sanitized = sanitizeString(value);
+  return sanitized ? sanitized.toLowerCase() : null;
+}
+
+function normalizeDomain(value: unknown): string | null {
+  const sanitized = sanitizeString(value);
+  if (!sanitized) return null;
+
+  let normalized = sanitized.toLowerCase().trim();
+  normalized = normalized.replace(/^https?:\/\//, "");
+  normalized = normalized.replace(/^www\./, "");
+  const slashIndex = normalized.indexOf("/");
+  if (slashIndex >= 0) {
+    normalized = normalized.slice(0, slashIndex);
+  }
+  return normalized || null;
+}
+
+function buildKey(prefix: string, value: string | null): string | null {
+  if (!value) return null;
+  return `${prefix}:${value}`;
+}
+
+type CompanyLike = Partial<Pick<Company, "name" | "websiteUrl" | "founderEmail" | "founderLinkedin">>;
+type InvestorLike = Partial<Pick<Investor, "name" | "firm" | "email" | "linkedinUrl" | "websiteUrl">>;
+
+export function getCompanyDedupKeys(company: CompanyLike | InsertCompany): string[] {
+  const keys = new Set<string>();
+  const nameKey = buildKey("name", normalizeIdentifier(company.name));
+  if (nameKey) keys.add(nameKey);
+
+  const websiteKey = buildKey("website", normalizeDomain(company.websiteUrl));
+  if (websiteKey) keys.add(websiteKey);
+
+  const founderEmailKey = buildKey("founderEmail", normalizeIdentifier(company.founderEmail));
+  if (founderEmailKey) keys.add(founderEmailKey);
+
+  const founderLinkedinKey = buildKey("founderLinkedin", normalizeIdentifier(company.founderLinkedin));
+  if (founderLinkedinKey) keys.add(founderLinkedinKey);
+
+  return Array.from(keys);
+}
+
+export function getInvestorDedupKeys(investor: InvestorLike | InsertInvestor): string[] {
+  const keys = new Set<string>();
+  const normalizedName = normalizeIdentifier(investor.name);
+  const normalizedFirm = normalizeIdentifier(investor.firm);
+
+  if (normalizedName && normalizedFirm) {
+    keys.add(`nameFirm:${normalizedName}|${normalizedFirm}`);
+  } else if (normalizedName) {
+    keys.add(`name:${normalizedName}`);
+  }
+
+  const emailKey = buildKey("email", normalizeIdentifier(investor.email));
+  if (emailKey) keys.add(emailKey);
+
+  const linkedinKey = buildKey("linkedin", normalizeIdentifier(investor.linkedinUrl));
+  if (linkedinKey) keys.add(linkedinKey);
+
+  const websiteKey = buildKey("website", normalizeDomain(investor.websiteUrl));
+  if (websiteKey) keys.add(websiteKey);
+
+  return Array.from(keys);
 }
 
 export function normalizeCompanyRecord(input: any): InsertCompany {
