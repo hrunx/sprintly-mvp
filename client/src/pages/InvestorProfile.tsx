@@ -61,7 +61,47 @@ export default function InvestorProfile() {
     );
   }
 
-  const tags = investor.tags ? JSON.parse(investor.tags as string) : [];
+  const computeTags = () => {
+    if (!investor.tags) return [];
+    try {
+      const parsed = typeof investor.tags === "string" ? JSON.parse(investor.tags) : investor.tags;
+      if (Array.isArray(parsed)) return parsed;
+      if (parsed && typeof parsed === "object") {
+        return Object.values(parsed)
+          .flatMap((value) => {
+            if (Array.isArray(value)) return value;
+            if (typeof value === "string") return value.split(",").map((tag) => tag.trim());
+            return [];
+          })
+          .filter(Boolean);
+      }
+      if (typeof parsed === "string") {
+        return parsed.split(",").map((tag) => tag.trim());
+      }
+    } catch (error) {
+      console.warn("[InvestorProfile] Failed to parse tags", error);
+    }
+    return [];
+  };
+
+  const focusTags = Array.from(
+    new Set(
+      computeTags()
+        .map((tag: string) => tag?.trim())
+        .filter((tag: string | undefined) => !!tag),
+    ),
+  );
+
+  const avatarUrl =
+    investor.avatarUrl ||
+    `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(investor.name || investor.firm || "investor")}`;
+
+  const formatMoney = (amount?: number | null) => {
+    if (!amount || amount <= 0) return null;
+    if (amount >= 1_000_000) return `$${(amount / 1_000_000).toFixed(1)}M`;
+    if (amount >= 1000) return `$${(amount / 1000).toFixed(0)}K`;
+    return `$${amount.toLocaleString()}`;
+  };
 
   return (
     <div className="space-y-6">
@@ -78,9 +118,9 @@ export default function InvestorProfile() {
             {/* Avatar */}
             <div className="flex-shrink-0">
               <img
-                src={investor.avatarUrl || ""}
+                src={avatarUrl}
                 alt={investor.name}
-                className="w-24 h-24 rounded-full bg-secondary"
+                className="w-24 h-24 rounded-full bg-secondary border-2 border-border"
               />
             </div>
 
@@ -131,8 +171,8 @@ export default function InvestorProfile() {
                   <div className="flex items-center gap-1.5">
                     <DollarSign className="h-4 w-4 text-purple-600" />
                     <span>
-                      ${(investor.checkSizeMin || 0) / 1000}K - $
-                      {(investor.checkSizeMax || 0) / 1000000}M
+                      {formatMoney(investor.checkSizeMin) || "N/A"}{" "}
+                      {investor.checkSizeMax ? `- ${formatMoney(investor.checkSizeMax)}` : ""}
                     </span>
                   </div>
                 )}
@@ -196,22 +236,29 @@ export default function InvestorProfile() {
       </div>
 
       {/* Tags */}
-      {tags.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Focus Areas & Expertise</CardTitle>
-          </CardHeader>
-          <CardContent>
+      <Card>
+        <CardHeader>
+          <CardTitle>Focus Areas & Expertise</CardTitle>
+          <CardDescription>
+            {focusTags.length > 0
+              ? "Submitted focus tags from this investor"
+              : "No focus areas have been provided yet"}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {focusTags.length > 0 ? (
             <div className="flex flex-wrap gap-2">
-              {tags.map((tag: string, idx: number) => (
-                <Badge key={idx} variant="secondary">
+              {focusTags.map((tag: string, idx: number) => (
+                <Badge key={`${tag}-${idx}`} variant="secondary" className="text-xs">
                   {tag}
                 </Badge>
               ))}
             </div>
-          </CardContent>
-        </Card>
-      )}
+          ) : (
+            <p className="text-sm text-muted-foreground">No tags available</p>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Network Connections */}
       <Card>

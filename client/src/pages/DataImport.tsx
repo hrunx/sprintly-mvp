@@ -6,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
 import { trpc } from "@/lib/trpc";
-import { Upload, Download, FileText, CheckCircle2, XCircle, AlertCircle } from "lucide-react";
+import { Upload, Download, FileText, CheckCircle2, XCircle, AlertCircle, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { ProcessingModal } from "@/components/ProcessingModal";
 
@@ -99,11 +99,26 @@ export default function DataImport() {
     }
   };
 
-  const downloadTemplate = (type: "companies" | "investors") => {
+  const downloadTemplate = async (type: "companies" | "investors") => {
     const filename = type === "companies" 
       ? "linkedin-companies-sample.csv"
       : "linkedin-investors-sample.csv";
-    window.open(`/templates/${filename}`, "_blank");
+    try {
+      const response = await fetch(`/templates/${filename}`);
+      if (!response.ok) throw new Error("Template not found");
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      toast.success("Template downloading...");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to download template");
+    }
   };
 
   return (
@@ -419,7 +434,7 @@ export default function DataImport() {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-3 gap-4">
               <div className="flex items-center gap-2 p-4 border rounded-lg bg-green-50">
                 <CheckCircle2 className="w-5 h-5 text-green-500" />
                 <div>
@@ -434,7 +449,26 @@ export default function DataImport() {
                   <p className="text-2xl font-bold">{importResult.errors?.length || 0}</p>
                 </div>
               </div>
+              <div className="flex items-center gap-2 p-4 border rounded-lg bg-blue-50">
+                <Sparkles className="w-5 h-5 text-blue-500" />
+                <div>
+                  <p className="text-sm font-medium">Matches Generated</p>
+                  <p className="text-2xl font-bold">{importResult.matchesGenerated || 0}</p>
+                </div>
+              </div>
             </div>
+
+            {importResult.matchesGenerated > 0 && (
+              <Alert>
+                <AlertDescription>
+                  Generated {importResult.matchesGenerated} new matches.{" "}
+                  <a href="/matches" className="underline font-medium">
+                    View them in Matches
+                  </a>
+                  .
+                </AlertDescription>
+              </Alert>
+            )}
 
             {importResult.errors && importResult.errors.length > 0 && (
               <Alert variant="destructive">

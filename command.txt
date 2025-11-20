@@ -1,0 +1,13 @@
+DROP DATABASE IF EXISTS sprintly;
+CREATE DATABASE sprintly;
+
+
+
+pnpm db:push
+
+
+npx tsx scripts/seed-company-data.ts
+
+
+pnpm dev
+

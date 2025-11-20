@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -28,9 +28,49 @@ export default function Search() {
     limit: 50,
   });
 
-  const sectors = ["Fintech", "Healthcare", "AI/ML", "SaaS", "E-commerce", "Climate Tech", "EdTech", "Logistics", "Cybersecurity", "Biotech"];
-  const stages = ["Pre-seed", "Seed", "Series A", "Series B", "Series C", "Growth"];
-  const geographies = ["MENA", "GCC", "North America", "Europe", "Asia Pacific", "Global"];
+  const sectorOptions = [
+    { label: "Fintech", value: "Fintech" },
+    { label: "Healthcare", value: "Healthcare" },
+    { label: "AI / ML", value: "AI/ML" },
+    { label: "SaaS", value: "SaaS" },
+    { label: "E-commerce", value: "E-commerce" },
+    { label: "Climate Tech", value: "ClimateTech" },
+    { label: "EdTech", value: "EdTech" },
+    { label: "Logistics", value: "Logistics" },
+    { label: "Cybersecurity", value: "Cybersecurity" },
+    { label: "Biotech", value: "Biotech" },
+  ];
+
+  const stageOptions = [
+    { label: "Pre-seed", value: "Pre-seed" },
+    { label: "Seed", value: "Seed" },
+    { label: "Series A", value: "Series A" },
+    { label: "Series B", value: "Series B" },
+    { label: "Series C", value: "Series C" },
+    { label: "Growth", value: "Growth" },
+  ];
+
+  const geographyOptions = [
+    { label: "North America", value: "North America" },
+    { label: "Europe", value: "Europe" },
+    { label: "Latin America", value: "Latin America" },
+    { label: "Asia Pacific", value: "Asia Pacific" },
+    { label: "Middle East", value: "Middle East" },
+    { label: "Africa", value: "Africa" },
+    { label: "Global", value: "Global" },
+  ];
+
+  const getLabel = (list: { label: string; value: string }[], value: string) =>
+    list.find((item) => item.value === value)?.label || value;
+
+  const activeFilters = useMemo(() => {
+    const filters: { label: string; value: string }[] = [];
+    if (sector !== "all") filters.push({ label: "Sector", value: getLabel(sectorOptions, sector) });
+    if (stage !== "all") filters.push({ label: "Stage", value: getLabel(stageOptions, stage) });
+    if (geography !== "all") filters.push({ label: "Geography", value: getLabel(geographyOptions, geography) });
+    if (searchTerm) filters.push({ label: "Search", value: searchTerm });
+    return filters;
+  }, [sector, stage, geography, searchTerm]);
 
   const formatCheckSize = (min?: number | null, max?: number | null) => {
     if (!min && !max) return "Not specified";
@@ -84,9 +124,9 @@ export default function Search() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All sectors</SelectItem>
-                  {sectors.map((s) => (
-                    <SelectItem key={s} value={s}>
-                      {s}
+                  {sectorOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -101,9 +141,9 @@ export default function Search() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All stages</SelectItem>
-                  {stages.map((s) => (
-                    <SelectItem key={s} value={s}>
-                      {s}
+                  {stageOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -118,14 +158,23 @@ export default function Search() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All regions</SelectItem>
-                  {geographies.map((g) => (
-                    <SelectItem key={g} value={g}>
-                      {g}
+                  {geographyOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
+          </div>
+
+          <div className="flex flex-wrap gap-2 mt-4">
+            {activeFilters.map((filter) => (
+              <Badge key={`${filter.label}-${filter.value}`} variant="outline" className="text-xs">
+                <span className="font-medium mr-1">{filter.label}:</span>
+                {filter.value}
+              </Badge>
+            ))}
           </div>
 
           <div className="flex gap-2 mt-4">

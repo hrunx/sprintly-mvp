@@ -3,7 +3,7 @@ import { drizzle } from "drizzle-orm/mysql2";
 import { 
   InsertUser, users, 
   companies, investors, matches, connections,
-  Company, Investor, Match, Connection
+  Company, Investor, Match, Connection, InsertMatch
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -188,6 +188,18 @@ export async function listInvestors(criteria: {
  * MATCH QUERIES
  */
 
+export async function listAllCompanies(): Promise<Company[]> {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(companies);
+}
+
+export async function listAllInvestors(): Promise<Investor[]> {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(investors);
+}
+
 export async function getCompanyMatches(companyId: number, limit = 20) {
   const db = await getDb();
   if (!db) return [];
@@ -198,6 +210,22 @@ export async function getCompanyMatches(companyId: number, limit = 20) {
     .where(eq(matches.companyId, companyId))
     .orderBy(desc(matches.score))
     .limit(limit);
+}
+
+export async function replaceMatch(record: InsertMatch) {
+  const db = await getDb();
+  if (!db) return;
+
+  await db
+    .delete(matches)
+    .where(
+      and(
+        eq(matches.companyId, record.companyId),
+        eq(matches.investorId, record.investorId)
+      )!
+    );
+
+  await db.insert(matches).values(record);
 }
 
 export async function getMatchById(id: number) {

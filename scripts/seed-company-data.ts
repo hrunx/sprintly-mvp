@@ -1,7 +1,32 @@
 import { drizzle } from "drizzle-orm/mysql2";
+import mysql from "mysql2/promise";
+import * as dotenv from "dotenv";
 import { companies, investors, matches, connections } from "../drizzle/schema";
 
-const db = drizzle(process.env.DATABASE_URL!);
+// Load environment variables
+dotenv.config();
+
+if (!process.env.DATABASE_URL) {
+  throw new Error("DATABASE_URL environment variable is not set");
+}
+
+// Parse DATABASE_URL
+const dbUrl = new URL(process.env.DATABASE_URL);
+
+// Create MySQL connection pool
+const pool = mysql.createPool({
+  host: dbUrl.hostname,
+  port: parseInt(dbUrl.port || "3306"),
+  user: dbUrl.username,
+  password: dbUrl.password,
+  database: dbUrl.pathname.slice(1), // Remove leading '/'
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0,
+});
+
+// Create drizzle instance with the pool
+const db = drizzle(pool);
 
 const sectors = [
   "Fintech",
@@ -301,9 +326,15 @@ async function seed() {
   } catch (error) {
     console.error("❌ Error seeding database:", error);
     throw error;
+  } finally {
+    // Close the connection pool
+    await pool.end();
   }
   
   process.exit(0);
 }
 
-seed();
+seed().catch((error) => {
+  console.error("❌ Fatal error:", error);
+  process.exit(1);
+});

@@ -3,27 +3,30 @@ import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { z } from "zod";
-import { getDb } from "./db";
+import { getDb, listAllCompanies, listAllInvestors } from "./db";
 import { eq, desc } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { companies, investors, introRequests, matches, connections } from "../drizzle/schema";
 import { sdk } from "./_core/sdk";
+import { normalizeCompanyRecord, normalizeInvestorRecord } from "./_core/importUtils";
+import { generateMatchesForCompany, generateMatchesForInvestor } from "./_core/matchingExecutor";
+import { getCsvLines, splitCsvLine } from "./_core/csvParser";
 
 export const appRouter = router({
   import: router({
     parseCompaniesCSV: protectedProcedure
       .input(z.object({ csvData: z.string() }))
       .mutation(async ({ input }) => {
-        const lines = input.csvData.trim().split('\n');
+        const lines = getCsvLines(input.csvData);
         if (lines.length < 2) throw new Error('CSV must have header and at least one data row');
         
-        const headers = lines[0].split(',').map(h => h.trim());
+        const headers = splitCsvLine(lines[0]);
         const companies = [];
         const errors = [];
         
         for (let i = 1; i < lines.length; i++) {
           try {
-            const values = lines[i].split(',').map(v => v.trim());
+            const values = splitCsvLine(lines[i]);
             const company: any = {};
             
             headers.forEach((header, idx) => {
@@ -58,7 +61,14 @@ export const appRouter = router({
             if (!company.name) throw new Error('Company name is required');
             if (!company.sector) throw new Error('Industry/Sector is required');
             
-            companies.push(company);
+            const normalized = normalizeCompanyRecord(company);
+            if (!normalized.name) {
+              throw new Error('Company name is required');
+            }
+            if (!normalized.sector) {
+              throw new Error('Industry/Sector is required');
+            }
+            companies.push(normalized);
           } catch (error: any) {
             errors.push({ row: i + 1, error: error.message });
           }
@@ -70,16 +80,16 @@ export const appRouter = router({
     parseInvestorsCSV: protectedProcedure
       .input(z.object({ csvData: z.string() }))
       .mutation(async ({ input }) => {
-        const lines = input.csvData.trim().split('\n');
+        const lines = getCsvLines(input.csvData);
         if (lines.length < 2) throw new Error('CSV must have header and at least one data row');
         
-        const headers = lines[0].split(',').map(h => h.trim());
+        const headers = splitCsvLine(lines[0]);
         const investors = [];
         const errors = [];
         
         for (let i = 1; i < lines.length; i++) {
           try {
-            const values = lines[i].split(',').map(v => v.trim());
+            const values = splitCsvLine(lines[i]);
             const investor: any = {};
             
             headers.forEach((header, idx) => {
@@ -121,7 +131,14 @@ export const appRouter = router({
             if (!investor.name) throw new Error('Investor name is required');
             if (!investor.firm) throw new Error('Company/Firm is required');
             
-            investors.push(investor);
+            const normalized = normalizeInvestorRecord(investor);
+            if (!normalized.name) {
+              throw new Error('Investor name is required');
+            }
+            if (!normalized.firm) {
+              throw new Error('Company/Firm is required');
+            }
+            investors.push(normalized);
           } catch (error: any) {
             errors.push({ row: i + 1, error: error.message });
           }
@@ -138,6 +155,8 @@ export const appRouter = router({
         
         let imported = 0;
         const errors = [];
+        let matchesGenerated = 0;
+        const investorsCache = await listAllInvestors();
         
         for (const company of input.companies) {
           try {
@@ -149,12 +168,29 @@ export const appRouter = router({
               confidence: 85
             });
             imported++;
+            
+            const [inserted] = await db
+              .select()
+              .from(companies)
+              .orderBy(desc(companies.id))
+              .limit(1);
+
+            if (inserted) {
+              try {
+                const { generated } = await generateMatchesForCompany(inserted.id, {
+                  investors: investorsCache,
+                });
+                matchesGenerated += generated;
+              } catch (matchError) {
+                console.warn("[Matching] Failed to compute matches for company", inserted.id, matchError);
+              }
+            }
           } catch (error: any) {
             errors.push({ company: company.name, error: error.message });
           }
         }
         
-        return { imported, errors, total: input.companies.length };
+        return { imported, errors, total: input.companies.length, matchesGenerated };
       }),
       
     importInvestors: protectedProcedure
@@ -165,6 +201,8 @@ export const appRouter = router({
         
         let imported = 0;
         const errors = [];
+        let matchesGenerated = 0;
+        const companiesCache = await listAllCompanies();
         
         for (const investor of input.investors) {
           try {
@@ -174,12 +212,29 @@ export const appRouter = router({
               confidence: 85
             });
             imported++;
+            
+            const [inserted] = await db
+              .select()
+              .from(investors)
+              .orderBy(desc(investors.id))
+              .limit(1);
+
+            if (inserted) {
+              try {
+                const { generated } = await generateMatchesForInvestor(inserted.id, {
+                  companies: companiesCache,
+                });
+                matchesGenerated += generated;
+              } catch (matchError) {
+                console.warn("[Matching] Failed to compute matches for investor", inserted.id, matchError);
+              }
+            }
           } catch (error: any) {
             errors.push({ investor: investor.name, error: error.message });
           }
         }
         
-        return { imported, errors, total: input.investors.length };
+        return { imported, errors, total: input.investors.length, matchesGenerated };
       }),
   }),
   settings: router({

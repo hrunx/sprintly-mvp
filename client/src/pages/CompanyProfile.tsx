@@ -60,7 +60,32 @@ export default function CompanyProfile() {
     return `$${amount}`;
   };
 
-  const tags = company.tags ? JSON.parse(company.tags as string) : [];
+  const computeTags = () => {
+    if (!company.tags) return [];
+    try {
+      const parsed = typeof company.tags === "string" ? JSON.parse(company.tags) : company.tags;
+      if (Array.isArray(parsed)) {
+        return parsed;
+      }
+      if (parsed && typeof parsed === "object") {
+        return Object.values(parsed)
+          .flatMap((value) => {
+            if (Array.isArray(value)) return value;
+            if (typeof value === "string") return value.split(",").map((item) => item.trim());
+            return [];
+          })
+          .filter(Boolean);
+      }
+      if (typeof parsed === "string") {
+        return parsed.split(",").map((item) => item.trim());
+      }
+    } catch (error) {
+      console.warn("[CompanyProfile] Failed to parse tags", error);
+    }
+    return [];
+  };
+
+  const tags = computeTags();
 
   return (
     <div className="space-y-6">
