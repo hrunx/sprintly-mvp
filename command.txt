@@ -2,7 +2,6 @@ DROP DATABASE IF EXISTS sprintly_db;
 CREATE DATABASE sprintly_db;
 
 
-
 pnpm db:push
 
 
