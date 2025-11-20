@@ -113,6 +113,155 @@ function parseListField(field?: string | string[] | null) {
   return field.split(",").map(item => item.trim());
 }
 
+function normalizeKeyword(value: string | null | undefined) {
+  if (!value) return "";
+  return value
+    .toLowerCase()
+    .replace(/[\s/&_]+/g, " ")
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+const RAW_KEYWORD_SYNONYMS: Record<string, string[]> = {
+  ai: ["artificial intelligence", "machine intelligence", "ai/ml", "machine learning"],
+  "ai ml": ["ai", "machine learning", "artificial intelligence"],
+  "machine learning": ["ml", "artificial intelligence", "ai"],
+  ml: ["machine learning", "artificial intelligence", "ai"],
+  fintech: [
+    "financial technology",
+    "finance technology",
+    "financial services technology",
+    "payments",
+    "fintech",
+  ],
+  "financial services": ["finserv", "banking", "fintech"],
+  ecommerce: ["e-commerce", "online retail", "digital commerce"],
+  "e commerce": ["ecommerce", "online retail", "digital commerce"],
+  healthtech: ["digital health", "health care technology", "healthcare"],
+  healthcare: ["health tech", "healthtech", "digital health"],
+  biotech: ["biotechnology", "life sciences"],
+  climatetech: ["climate tech", "clean tech", "cleantech", "sustainability"],
+  cleantech: ["climate tech", "sustainability"],
+  saas: ["software as a service", "cloud software", "b2b software"],
+  "software as a service": ["saas", "cloud software"],
+  b2b: ["business to business"],
+  b2c: ["business to consumer"],
+  marketplace: ["platform", "two sided marketplace"],
+};
+
+const KEYWORD_SYNONYM_LOOKUP: Record<string, Set<string>> = {};
+
+Object.entries(RAW_KEYWORD_SYNONYMS).forEach(([root, synonyms]) => {
+  const normalizedRoot = normalizeKeyword(root);
+  if (!normalizedRoot) return;
+  const group = new Set<string>();
+  group.add(normalizedRoot);
+
+  synonyms.forEach(term => {
+    const normalized = normalizeKeyword(term);
+    if (normalized) group.add(normalized);
+  });
+
+  group.forEach(term => {
+    KEYWORD_SYNONYM_LOOKUP[term] = new Set(group);
+  });
+});
+
+function expandKeywords(keyword: string) {
+  const expanded = new Set<string>();
+  const normalized = normalizeKeyword(keyword);
+  if (!normalized) return expanded;
+
+  expanded.add(normalized);
+
+  const synonyms = KEYWORD_SYNONYM_LOOKUP[normalized];
+  synonyms?.forEach(term => expanded.add(term));
+
+  // Add slash-delimited variants (e.g., ai/ml)
+  normalized.split(/[\s-]/).forEach(part => {
+    const clean = normalizeKeyword(part);
+    if (clean && clean.length >= 2) {
+      expanded.add(clean);
+      KEYWORD_SYNONYM_LOOKUP[clean]?.forEach(term => expanded.add(term));
+    }
+  });
+
+  return expanded;
+}
+
+function buildKeywordList(
+  values: Array<string | string[] | null | undefined>,
+): string[] {
+  const keywords = new Set<string>();
+
+  values.forEach(value => {
+    if (!value) return;
+
+    if (Array.isArray(value)) {
+      value.forEach(item => {
+        const normalized = normalizeKeyword(item);
+        if (normalized) {
+          expandKeywords(normalized).forEach(term => keywords.add(term));
+        }
+      });
+      return;
+    }
+
+    try {
+      const parsed = JSON.parse(value);
+      if (Array.isArray(parsed)) {
+        parsed.forEach(item => {
+          const normalized = normalizeKeyword(item);
+          if (normalized) {
+            expandKeywords(normalized).forEach(term => keywords.add(term));
+          }
+        });
+        return;
+      }
+    } catch {
+      // ignore JSON parse errors for plain strings
+    }
+
+    value
+      .split(/[,;]/)
+      .map(item => normalizeKeyword(item))
+      .filter(Boolean)
+      .forEach(keyword => {
+        expandKeywords(keyword).forEach(term => keywords.add(term));
+      });
+  });
+
+  return Array.from(keywords);
+}
+
+function keywordOverlapRatio(listA: string[], listB: string[]) {
+  if (!listA.length || !listB.length) return 0;
+  const setA = new Set(listA);
+  const setB = new Set(listB);
+  let matches = 0;
+
+  setA.forEach(keyword => {
+    if (setB.has(keyword)) matches++;
+  });
+
+  const normalizer = Math.min(setA.size, setB.size) || 1;
+  return matches / normalizer;
+}
+
+function buildTokenSetFromKeywords(keywords: string[]) {
+  const tokens = new Set<string>();
+  keywords.forEach(keyword => {
+    keyword.split(" ").forEach(part => {
+      const normalized = normalizeKeyword(part);
+      if (normalized && normalized.length >= 2) {
+        tokens.add(normalized);
+      }
+    });
+  });
+  return tokens;
+}
+
 function jaccardSimilarity(setA: Set<string>, setB: Set<string>) {
   if (setA.size === 0 || setB.size === 0) return 0;
   let intersection = 0;
@@ -147,25 +296,36 @@ function buildTokenSet(sources: Array<Set<string> | string[]>) {
 }
 
 function calculateSectorScore(company: Company, investor: Investor): MatchBreakdownItem {
-  const companyTokens = buildTokenSet([
-    toTokenSet(company.sector),
-    toTokenSet(company.subSector),
+  const companyKeywords = buildKeywordList([
+    company.sector,
+    company.subSector,
     parseListField(company.tags),
   ]);
-  const investorTokens = buildTokenSet([
-    toTokenSet(investor.sector),
-    toTokenSet(investor.subSector),
+  const investorKeywords = buildKeywordList([
+    investor.sector,
+    investor.subSector,
     parseListField(investor.tags),
   ]);
 
-  const overlap = jaccardSimilarity(companyTokens, investorTokens);
-  const score = numericScoreFromRatio(overlap);
+  const companyTokens = buildTokenSetFromKeywords(companyKeywords);
+  const investorTokens = buildTokenSetFromKeywords(investorKeywords);
+
+  const tokenOverlap = jaccardSimilarity(companyTokens, investorTokens);
+  const keywordOverlap = keywordOverlapRatio(companyKeywords, investorKeywords);
+
+  const combinedSimilarity = tokenOverlap * 0.6 + keywordOverlap * 0.4;
+  const score = numericScoreFromRatio(combinedSimilarity);
+
   let reason = "No sector data available";
 
-  if (score >= 80) reason = "Excellent sector alignment";
-  else if (score >= 60) reason = "Strong overlapping sectors";
-  else if (score >= 40) reason = "Partial sector overlap";
-  else reason = "Limited sector overlap";
+  if (!companyKeywords.length && !investorKeywords.length) {
+    reason = "No sector data available";
+  } else if (!companyKeywords.length || !investorKeywords.length) {
+    reason = "Incomplete sector data for comparison";
+  } else if (score >= 85) reason = "Excellent keyword alignment";
+  else if (score >= 65) reason = "Strong overlapping keywords";
+  else if (score >= 45) reason = "Partial sector overlap";
+  else reason = "Limited keyword overlap";
 
   return {
     key: "sector",
