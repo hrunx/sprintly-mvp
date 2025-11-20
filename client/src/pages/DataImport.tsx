@@ -129,7 +129,26 @@ export default function DataImport() {
                 </span>
               </div>
 
-              <div className="border-2 border-dashed rounded-lg p-8 text-center">
+              <div 
+                className="border-2 border-dashed rounded-lg p-8 text-center transition-colors hover:border-primary/50"
+                onDrop={(e) => {
+                  e.preventDefault();
+                  const file = e.dataTransfer.files[0];
+                  if (file && file.type === 'text/csv') {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                      const text = e.target?.result as string;
+                      setCsvData(text);
+                      setParsedData(null);
+                      setImportResult(null);
+                    };
+                    reader.readAsText(file);
+                  } else {
+                    toast.error('Please upload a CSV file');
+                  }
+                }}
+                onDragOver={(e) => e.preventDefault()}
+              >
                 <input
                   type="file"
                   accept=".csv"
@@ -203,7 +222,26 @@ export default function DataImport() {
                 </span>
               </div>
 
-              <div className="border-2 border-dashed rounded-lg p-8 text-center">
+              <div 
+                className="border-2 border-dashed rounded-lg p-8 text-center transition-colors hover:border-primary/50"
+                onDrop={(e) => {
+                  e.preventDefault();
+                  const file = e.dataTransfer.files[0];
+                  if (file && file.type === 'text/csv') {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                      const text = e.target?.result as string;
+                      setCsvData(text);
+                      setParsedData(null);
+                      setImportResult(null);
+                    };
+                    reader.readAsText(file);
+                  } else {
+                    toast.error('Please upload a CSV file');
+                  }
+                }}
+                onDragOver={(e) => e.preventDefault()}
+              >
                 <input
                   type="file"
                   accept=".csv"

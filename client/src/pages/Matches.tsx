@@ -28,6 +28,10 @@ import {
 export default function Matches() {
   const [selectedCompany, setSelectedCompany] = useState<number>(1);
   const [isRunningEngine, setIsRunningEngine] = useState(false);
+  const [minScore, setMinScore] = useState<number>(0);
+  const [sectorFilter, setSectorFilter] = useState<string>('all');
+  const [stageFilter, setStageFilter] = useState<string>('all');
+  const [geoFilter, setGeoFilter] = useState<string>('all');
   
   const runEngineMutation = trpc.matching.runEngine.useMutation({
     onSuccess: (data) => {
@@ -48,13 +52,35 @@ export default function Matches() {
   };
 
   const { data: companies } = trpc.companies.list.useQuery({});
-
-  const { data: matches, isLoading } = trpc.matches.list.useQuery({
-    companyId: selectedCompany,
-    limit: 20,
-  });
-
   const { data: investors } = trpc.investors.list.useQuery({});
+
+  const { data: allMatches, isLoading } = trpc.matches.list.useQuery({
+    companyId: selectedCompany,
+    limit: 100,
+  });
+  
+  // Create a map of investor data for quick lookup
+  const investorMap = new Map(investors?.map((inv) => [inv.id, inv]));
+  
+  // Apply client-side filters
+  const matches = allMatches?.filter((match) => {
+    const investor = investorMap.get(match.investorId);
+    if (!investor) return false;
+    
+    // Score filter
+    if (match.overallScore < minScore) return false;
+    
+    // Sector filter
+    if (sectorFilter !== 'all' && investor.sector?.toLowerCase() !== sectorFilter.toLowerCase()) return false;
+    
+    // Stage filter
+    if (stageFilter !== 'all' && investor.stage?.toLowerCase() !== stageFilter.toLowerCase()) return false;
+    
+    // Geography filter
+    if (geoFilter !== 'all' && !investor.geography?.toLowerCase().includes(geoFilter.toLowerCase())) return false;
+    
+    return true;
+  });
 
   const requestIntroMutation = trpc.introRequests.create.useMutation();
 
@@ -67,9 +93,6 @@ export default function Matches() {
       toast.error("Failed to send introduction request");
     }
   };
-
-  // Create a map of investor data for quick lookup
-  const investorMap = new Map(investors?.map((inv) => [inv.id, inv]));
 
   const getScoreColor = (score: number) => {
     if (score >= 80) return "text-green-600 bg-green-50 dark:bg-green-950";
@@ -96,6 +119,21 @@ export default function Matches() {
           </p>
         </div>
         <div className="flex items-center gap-3">
+          {/* Clear Filters Button */}
+          {(minScore > 0 || sectorFilter !== 'all' || stageFilter !== 'all' || geoFilter !== 'all') && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setMinScore(0);
+                setSectorFilter('all');
+                setStageFilter('all');
+                setGeoFilter('all');
+              }}
+            >
+              Clear Filters
+            </Button>
+          )}
           <Button
             onClick={handleRunMatching}
             disabled={isRunningEngine}
@@ -112,13 +150,13 @@ export default function Matches() {
         </div>
       </div>
 
-      {/* Company Selector */}
+      {/* Company Selector & Filters */}
       <Card>
         <CardHeader>
           <CardTitle>Select Company</CardTitle>
           <CardDescription>Choose a company to see investor matches</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
           <Select
             value={selectedCompany.toString()}
             onValueChange={(value) => setSelectedCompany(parseInt(value))}
@@ -140,6 +178,90 @@ export default function Matches() {
               ))}
             </SelectContent>
           </Select>
+          
+          {/* Filters */}
+          <div className="border-t pt-4">
+            <h3 className="text-sm font-medium mb-3">Filters</h3>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              {/* Min Score Slider */}
+              <div className="space-y-2">
+                <label className="text-sm text-muted-foreground">
+                  Min Score: {minScore}%
+                </label>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  step="5"
+                  value={minScore}
+                  onChange={(e) => setMinScore(parseInt(e.target.value))}
+                  className="w-full"
+                />
+              </div>
+              
+              {/* Sector Filter */}
+              <div className="space-y-2">
+                <label className="text-sm text-muted-foreground">Sector</label>
+                <Select value={sectorFilter} onValueChange={setSectorFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="All Sectors" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Sectors</SelectItem>
+                    <SelectItem value="fintech">Fintech</SelectItem>
+                    <SelectItem value="saas">SaaS</SelectItem>
+                    <SelectItem value="edtech">EdTech</SelectItem>
+                    <SelectItem value="healthtech">HealthTech</SelectItem>
+                    <SelectItem value="ai">AI/ML</SelectItem>
+                    <SelectItem value="ecommerce">E-commerce</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              {/* Stage Filter */}
+              <div className="space-y-2">
+                <label className="text-sm text-muted-foreground">Stage</label>
+                <Select value={stageFilter} onValueChange={setStageFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="All Stages" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Stages</SelectItem>
+                    <SelectItem value="pre-seed">Pre-Seed</SelectItem>
+                    <SelectItem value="seed">Seed</SelectItem>
+                    <SelectItem value="series a">Series A</SelectItem>
+                    <SelectItem value="series b">Series B</SelectItem>
+                    <SelectItem value="series c">Series C+</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              {/* Geography Filter */}
+              <div className="space-y-2">
+                <label className="text-sm text-muted-foreground">Geography</label>
+                <Select value={geoFilter} onValueChange={setGeoFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="All Locations" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Locations</SelectItem>
+                    <SelectItem value="north america">North America</SelectItem>
+                    <SelectItem value="europe">Europe</SelectItem>
+                    <SelectItem value="asia">Asia</SelectItem>
+                    <SelectItem value="global">Global</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            
+            {/* Results Count */}
+            <div className="mt-4 text-sm text-muted-foreground">
+              Showing {matches?.length || 0} matches
+              {(minScore > 0 || sectorFilter !== 'all' || stageFilter !== 'all' || geoFilter !== 'all') && (
+                <span> (filtered from {allMatches?.length || 0} total)</span>
+              )}
+            </div>
+          </div>
         </CardContent>
       </Card>
 

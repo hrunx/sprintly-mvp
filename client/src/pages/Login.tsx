@@ -30,12 +30,14 @@ export default function Login() {
 
   const loginMutation = trpc.auth.login.useMutation({
     onSuccess: async () => {
+      toast.success("Welcome back!");
       // Invalidate and refetch auth query to ensure user data is loaded
       await utils.auth.me.invalidate();
       await utils.auth.me.refetch();
-      toast.success("Welcome back!");
-      // Small delay to ensure query completes before redirect
-      setTimeout(() => setLocation("/"), 100);
+      // Longer delay to ensure query completes and state updates
+      setTimeout(() => {
+        setLocation("/");
+      }, 300);
     },
     onError: (error) => {
       toast.error(error.message || "Login failed");
@@ -44,12 +46,14 @@ export default function Login() {
 
   const registerMutation = trpc.auth.register.useMutation({
     onSuccess: async () => {
+      toast.success("Account created successfully!");
       // Invalidate and refetch auth query to ensure user data is loaded
       await utils.auth.me.invalidate();
       await utils.auth.me.refetch();
-      toast.success("Account created successfully!");
-      // Small delay to ensure query completes before redirect
-      setTimeout(() => setLocation("/"), 100);
+      // Longer delay to ensure query completes and state updates
+      setTimeout(() => {
+        setLocation("/");
+      }, 300);
     },
     onError: (error) => {
       toast.error(error.message || "Registration failed");

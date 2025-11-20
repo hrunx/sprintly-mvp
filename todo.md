@@ -148,3 +148,37 @@
 - [x] Test matching engine with sample data
 - [x] Matching engine successfully running and generating matches
 - [ ] Write unit tests for matching algorithm
+
+## CSV Import UI Enhancement
+- [x] Create drag-and-drop file upload component
+- [ ] Add CSV preview table before import
+- [ ] Implement CSV validation (check headers, data types)
+- [ ] Show import progress indicator
+- [ ] Display import results summary
+- [ ] Add sample CSV download templates
+
+## Email Notification System
+- [x] Install nodemailer dependency
+- [x] Create email service module (emailService.ts)
+- [x] Design email templates for match notifications
+- [x] Implement automatic email sending for 80%+ matches
+- [x] Add email configuration documentation (EMAIL_SETUP.md)
+- [ ] Test email delivery (requires SMTP configuration)
+
+## Match Filtering
+- [x] Add minimum score slider to Matches page
+- [x] Add sector filter dropdown
+- [x] Add stage filter dropdown
+- [x] Add geography filter dropdown
+- [x] Implement filter state management
+- [x] Implement client-side filtering logic
+- [x] Add "Clear Filters" button
+- [x] Show filtered results count
+
+## Critical Bug: Authentication Redirect Loop (REOCCURRED)
+- [x] Reproduce login redirect issue in fresh browser session
+- [x] Check if cookie is being set after login mutation
+- [x] Verify trpc.auth.me query is refetching after login
+- [x] Increased redirect delay from 100ms to 300ms
+- [x] Ensured refetch completes before redirect
+- [ ] Test complete login flow with fix

@@ -1,6 +1,7 @@
 import { getDb } from './db';
 import { companies, investors, matches } from '../drizzle/schema';
 import { eq } from 'drizzle-orm';
+import { emailService } from './emailService';
 
 /**
  * Matching Engine - Calculates compatibility scores between companies and investors
@@ -371,6 +372,23 @@ export async function runMatchingEngine(): Promise<{ created: number; updated: n
           // Create new match
           await db.insert(matches).values(matchData);
           created++;
+          
+          // Send email notification for high-quality matches (80%+)
+          if (score.overallScore >= 80) {
+            await emailService.sendMatchNotification({
+              companyName: company.name,
+              investorName: investor.name,
+              investorEmail: investor.email || 'N/A',
+              matchScore: score.overallScore,
+              sectorScore: score.sectorScore,
+              stageScore: score.stageScore,
+              geoScore: score.geographyScore,
+              tractionScore: score.tractionScore,
+              checkSizeScore: score.checkSizeScore,
+              thesisScore: score.thesisScore,
+              matchReasons: score.reasoning,
+            });
+          }
         }
       }
     }
