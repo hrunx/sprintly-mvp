@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { notifyOwner } from "./notification";
 import { adminProcedure, publicProcedure, router } from "./trpc";
+import { resetDatabase } from "../services/maintenance";
 
 export const systemRouter = router({
   health: publicProcedure
@@ -26,4 +27,9 @@ export const systemRouter = router({
         success: delivered,
       } as const;
     }),
+
+  factoryResetData: adminProcedure.mutation(async () => {
+    await resetDatabase();
+    return { success: true as const };
+  }),
 });

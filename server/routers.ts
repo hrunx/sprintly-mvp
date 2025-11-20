@@ -526,6 +526,10 @@ export const appRouter = router({
         message: z.string().optional(),
       }))
       .mutation(async ({ input, ctx }) => {
+        if (!ctx.user) {
+          throw new TRPCError({ code: "UNAUTHORIZED" });
+        }
+
         const db = await getDb();
         if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not available" });
 
@@ -543,6 +547,10 @@ export const appRouter = router({
 
     list: protectedProcedure
       .query(async ({ ctx }) => {
+        if (!ctx.user) {
+          throw new TRPCError({ code: "UNAUTHORIZED" });
+        }
+
         const db = await getDb();
         if (!db) return [];
 

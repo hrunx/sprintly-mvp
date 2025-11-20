@@ -140,6 +140,7 @@ export default function Settings() {
 
   const { data: savedConfig, isLoading } = trpc.settings.getMatchingConfig.useQuery();
   const saveConfigMutation = trpc.settings.saveMatchingConfig.useMutation();
+  const resetDatabaseMutation = trpc.system.factoryResetData.useMutation();
 
   useEffect(() => {
     if (savedConfig) {
@@ -193,6 +194,16 @@ export default function Settings() {
     setSelectedPreset("balanced");
     setHasChanges(true);
     toast.info("Reset to default configuration");
+  };
+
+  const handleFactoryReset = async () => {
+    try {
+      await resetDatabaseMutation.mutateAsync();
+      toast.success("All investor, company, and match data has been cleared.");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unknown error";
+      toast.error(`Failed to reset database: ${message}`);
+    }
   };
 
   const exportConfig = () => {
@@ -279,6 +290,29 @@ export default function Settings() {
           </CardContent>
         </Card>
       )}
+
+      {/* Admin Controls */}
+      <Card className="border-destructive/40 bg-destructive/5">
+        <CardHeader>
+          <CardTitle className="text-destructive">Factory Reset Data</CardTitle>
+          <CardDescription>
+            Wipe all imported companies, investors, matches, lists, and analytics.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <p className="text-sm text-muted-foreground md:max-w-2xl">
+            This action cannot be undone. Use only when you need a clean slate for demos.
+          </p>
+          <Button
+            variant="destructive"
+            onClick={handleFactoryReset}
+            disabled={resetDatabaseMutation.isPending}
+          >
+            <RotateCcw className="h-4 w-4 mr-2" />
+            {resetDatabaseMutation.isPending ? "Resetting..." : "Factory Reset Data"}
+          </Button>
+        </CardContent>
+      </Card>
 
       {/* Live Match Preview */}
       <MatchPreview config={config} />
