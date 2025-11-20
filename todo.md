@@ -198,3 +198,14 @@
 - [x] Display matching completion notification with match count
 - [x] Show toast notification directing users to Top Matches tab
 - [ ] Test complete workflow: upload companies → upload investors → auto-match → view results
+
+## CSV Testing and GitHub Push
+- [x] Verify no TypeScript errors in server code
+- [x] Verify no TypeScript errors in client code
+- [x] Fix CSV parsing parseInt NaN handling
+- [x] Write and run CSV upload unit tests (3/3 passed)
+- [x] Add test CSV files to repository (test-csvs directory)
+- [ ] Test CSV upload workflow in browser
+- [ ] Verify matching engine runs after investor upload
+- [ ] Verify matches are created and displayed
+- [ ] Push all changes to GitHub local2 branch

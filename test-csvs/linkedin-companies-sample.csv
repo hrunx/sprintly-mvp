@@ -1,0 +1,6 @@
+name,description,sector,stage,location,founded,teamSize,businessModel,fundingRound,seeking,alreadyRaised,valuation,annualRevenue,revenueGrowth,customers,mrr,founderName,founderEmail
+"GreenTech Solutions","Sustainable energy management platform for commercial buildings","CleanTech","Seed","Boston, MA",2023,15,"B2B SaaS","Seed",3000000,800000,10000000,200000,350,25,16000,"Emma Wilson","emma@greentech.io"
+"FoodieAI","AI-powered meal planning and grocery delivery service","FoodTech","Series A","Los Angeles, CA",2021,35,"B2C","Series A",8000000,4000000,35000000,1500000,200,50000,125000,"Carlos Martinez","carlos@foodieai.com"
+"DevOps Pro","Cloud infrastructure automation and monitoring platform","DevOps","Seed","Seattle, WA",2022,20,"B2B SaaS","Seed",2500000,1000000,12000000,400000,280,80,33000,"Lisa Chang","lisa@devopspro.io"
+"HealthTrack","Wearable health monitoring for chronic disease management","HealthTech","Series A","New York, NY",2020,45,"B2B2C","Series A",10000000,6000000,45000000,2000000,180,15000,166000,"Dr. Robert Kim","robert@healthtrack.com"
+"EduPlay","Gamified learning platform for K-12 students","EdTech","Seed","Austin, TX",2023,18,"B2B SaaS","Seed",3500000,1200000,15000000,350000,400,8000,29000,"Sophia Patel","sophia@eduplay.io"
