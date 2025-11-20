@@ -18,9 +18,8 @@ export default function DataImport() {
   const [importResult, setImportResult] = useState<any>(null);
   const [showProcessing, setShowProcessing] = useState(false);
 
-  const parseCompaniesMutation = trpc.import.parseCompaniesCSV.useMutation();
-  const parseInvestorsMutation = trpc.import.parseInvestorsCSV.useMutation();
-  // Import handled directly in parsing step
+  const uploadCompaniesMutation = trpc.csv.uploadCompanies.useMutation();
+  const uploadInvestorsMutation = trpc.csv.uploadInvestors.useMutation();
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -42,46 +41,43 @@ export default function DataImport() {
       return;
     }
 
+    setImporting(true);
+    setShowProcessing(true);
+
     try {
       if (activeTab === "companies") {
-        const result = await parseCompaniesMutation.mutateAsync({ csvData });
+        const result = await uploadCompaniesMutation.mutateAsync({ csvContent: csvData });
         setParsedData(result);
-        toast.success(`Parsed ${result.companies.length} companies successfully`);
-
+        setImportResult({ imported: result.count, total: result.count });
+        toast.success(`✅ ${result.count} companies uploaded to database`);
       } else {
-        const result = await parseInvestorsMutation.mutateAsync({ csvData });
+        const result = await uploadInvestorsMutation.mutateAsync({ csvContent: csvData });
         setParsedData(result);
-        toast.success(`Parsed ${result.investors.length} investors successfully`);
-
+        setImportResult({ 
+          imported: result.count, 
+          total: result.count,
+          matchingResult: result.matchingResult 
+        });
+        toast.success(`✅ ${result.count} investors uploaded to database`);
+        
+        // Show matching completion notification
+        setTimeout(() => {
+          toast.success(
+            `🎯 Matching engine completed! ${result.matchingResult.created} new matches created. Check the Top Matches tab for latest results.`,
+            { duration: 8000 }
+          );
+        }, 1000);
       }
     } catch (error: any) {
-      toast.error(error.message || "Failed to parse CSV");
+      toast.error(error.message || "Failed to upload CSV");
+      setImporting(false);
+      setShowProcessing(false);
     }
   };
 
-  const handleImport = async () => {
-    if (!parsedData) {
-      toast.error("Please parse the CSV first");
-      return;
-    }
-
-    setImporting(true);
-    setShowProcessing(true);
-    try {
-      if (activeTab === "companies") {
-        // Simulate import success
-        setImportResult({ imported: parsedData.companies.length, total: parsedData.companies.length });
-        toast.success(`Imported ${parsedData.companies.length} companies successfully`);
-      } else {
-        // Simulate import success
-        setImportResult({ imported: parsedData.investors.length, total: parsedData.investors.length });
-        toast.success(`Imported ${parsedData.investors.length} investors successfully`);
-      }
-    } catch (error: any) {
-      toast.error(error.message || "Failed to import data");
-    } finally {
-      // Keep modal open until animation completes
-    }
+  const handleImport = () => {
+    // Import is now handled directly in handleParseCSV
+    handleParseCSV();
   };
 
   const downloadTemplate = (type: "companies" | "investors") => {
@@ -179,7 +175,7 @@ export default function DataImport() {
               <div className="flex gap-2">
                 <Button
                   onClick={handleParseCSV}
-                  disabled={!csvData || parseCompaniesMutation.isPending}
+                  disabled={!csvData || uploadCompaniesMutation.isPending || importing}
                   className="gap-2"
                 >
                   <FileText className="w-4 h-4" />
@@ -272,7 +268,7 @@ export default function DataImport() {
               <div className="flex gap-2">
                 <Button
                   onClick={handleParseCSV}
-                  disabled={!csvData || parseInvestorsMutation.isPending}
+                  disabled={!csvData || uploadInvestorsMutation.isPending || importing}
                   className="gap-2"
                 >
                   <FileText className="w-4 h-4" />

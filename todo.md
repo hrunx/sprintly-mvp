@@ -187,3 +187,14 @@
 - [x] Add server-side logging to debug auth flow
 - [x] Complete login flow verified and working
 - [x] Auto-redirect from /login to dashboard working
+
+## CSV Upload and Automatic Matching
+- [x] Add more sample matches to seed data (3 matches in seed script)
+- [x] Implement CSV parsing for company uploads (csvRouter.ts)
+- [x] Implement CSV parsing for investor uploads (csvRouter.ts)
+- [x] Save parsed CSV data to database
+- [x] Show upload success message with count (X companies/investors uploaded)
+- [x] Auto-trigger matching engine after investor CSV upload
+- [x] Display matching completion notification with match count
+- [x] Show toast notification directing users to Top Matches tab
+- [ ] Test complete workflow: upload companies → upload investors → auto-match → view results

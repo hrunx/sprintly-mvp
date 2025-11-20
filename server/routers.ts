@@ -3,6 +3,7 @@ import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { TRPCError } from "@trpc/server";
 import { authRouter } from "./authRouter";
 import { matchingRouter } from "./matchingRouter";
+import { csvRouter } from "./csvRouter";
 import { runMatchingEngine } from "./matchingEngine";
 import * as db from "./db";
 import { getDb } from "./db";
@@ -132,7 +133,10 @@ export const appRouter = router({
       }),
   }),
 
-  // CSV Import
+  // CSV Upload (new)
+  csv: csvRouter,
+
+  // CSV Import (legacy)
   import: router({
     parseCompaniesCSV: protectedProcedure
       .input(z.object({ csvData: z.string() }))
