@@ -1,5 +1,6 @@
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
+import { RefreshCw } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -26,6 +27,25 @@ import {
 
 export default function Matches() {
   const [selectedCompany, setSelectedCompany] = useState<number>(1);
+  const [isRunningEngine, setIsRunningEngine] = useState(false);
+  
+  const runEngineMutation = trpc.matching.runEngine.useMutation({
+    onSuccess: (data) => {
+      toast.success(`Matching complete! Created ${data.created} new matches, updated ${data.updated}.`);
+      setIsRunningEngine(false);
+      // Refetch matches after running engine
+      setTimeout(() => window.location.reload(), 1000);
+    },
+    onError: (error) => {
+      toast.error(`Matching failed: ${error.message}`);
+      setIsRunningEngine(false);
+    },
+  });
+  
+  const handleRunMatching = () => {
+    setIsRunningEngine(true);
+    runEngineMutation.mutate();
+  };
 
   const { data: companies } = trpc.companies.list.useQuery({});
 
@@ -75,9 +95,20 @@ export default function Matches() {
             Discover the best investor matches for your company based on AI analysis
           </p>
         </div>
-        <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-purple-500 to-pink-600 text-white">
-          <Sparkles className="h-5 w-5" />
-          <span className="font-semibold">Smart Matching</span>
+        <div className="flex items-center gap-3">
+          <Button
+            onClick={handleRunMatching}
+            disabled={isRunningEngine}
+            variant="outline"
+            className="gap-2"
+          >
+            <RefreshCw className={`h-4 w-4 ${isRunningEngine ? "animate-spin" : ""}`} />
+            {isRunningEngine ? "Running..." : "Run Matching Engine"}
+          </Button>
+          <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-purple-500 to-pink-600 text-white">
+            <Sparkles className="h-5 w-5" />
+            <span className="font-semibold">Smart Matching</span>
+          </div>
         </div>
       </div>
 
@@ -129,9 +160,8 @@ export default function Matches() {
             const investor = investorMap.get(match.investorId);
             if (!investor) return null;
 
-            const matchReasons = match.matchReasons
-              ? JSON.parse(match.matchReasons as string)
-              : [];
+            // matchReasons is a plain string, not JSON
+            const matchReasonsText = match.matchReasons || "This investor's focus aligns well with your company profile.";
 
             return (
               <Card
@@ -201,17 +231,7 @@ export default function Matches() {
                       {/* Match Explanation */}
                       <div className="space-y-2">
                         <div className="text-sm font-medium">Why this is a good match:</div>
-                        <p className="text-sm text-muted-foreground">This investor's focus aligns well with your company profile.</p>
-                        
-                        {matchReasons.length > 0 && (
-                          <div className="flex flex-wrap gap-2 mt-2">
-                            {matchReasons.map((reason: string, idx: number) => (
-                              <Badge key={idx} variant="secondary" className="text-xs">
-                                {reason}
-                              </Badge>
-                            ))}
-                          </div>
-                        )}
+                        <p className="text-sm text-muted-foreground">{matchReasonsText}</p>
                       </div>
 
                       {/* Score Breakdown */}

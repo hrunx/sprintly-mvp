@@ -2,6 +2,8 @@ import { z } from "zod";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { TRPCError } from "@trpc/server";
 import { authRouter } from "./authRouter";
+import { matchingRouter } from "./matchingRouter";
+import { runMatchingEngine } from "./matchingEngine";
 import * as db from "./db";
 import { getDb } from "./db";
 import { introRequests } from "../drizzle/schema";
@@ -57,6 +59,9 @@ export const appRouter = router({
         return db.getInvestorById(input.id);
       }),
   }),
+
+  // Matching Engine
+  matching: matchingRouter,
 
   // Matches
   matches: router({
@@ -160,6 +165,18 @@ export const appRouter = router({
           if (company.name) companies.push(company);
         }
         
+        // Save companies to database
+        const database = await getDb();
+        if (database) {
+          const { companies: companiesTable } = await import('../drizzle/schema');
+          for (const company of companies) {
+            await database.insert(companiesTable).values(company);
+          }
+        }
+        
+        // Trigger matching engine after import
+        setTimeout(() => runMatchingEngine().catch(console.error), 1000);
+        
         return { companies, total: companies.length };
       }),
     
@@ -189,6 +206,18 @@ export const appRouter = router({
           
           if (investor.name) investors.push(investor);
         }
+        
+        // Save investors to database
+        const database = await getDb();
+        if (database) {
+          const { investors: investorsTable } = await import('../drizzle/schema');
+          for (const investor of investors) {
+            await database.insert(investorsTable).values(investor);
+          }
+        }
+        
+        // Trigger matching engine after import
+        setTimeout(() => runMatchingEngine().catch(console.error), 1000);
         
         return { investors, total: investors.length };
       }),
