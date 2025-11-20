@@ -17,14 +17,17 @@ export async function createContext(
   try {
     // Extract JWT token from request
     const token = extractToken(opts.req);
+    console.log('[Auth Debug] Token extracted:', token ? 'YES' : 'NO');
     
     if (token) {
       // Verify token
       const payload = verifyToken(token);
+      console.log('[Auth Debug] Token verified:', payload ? 'YES' : 'NO', payload ? `userId: ${payload.userId}` : '');
       
-      if (payload) {
+      if (payload && payload.userId) {
         // Get user from database
         const dbUser = await getUserById(payload.userId);
+        console.log('[Auth Debug] User from DB:', dbUser ? `Found: ${dbUser.email}` : 'NOT FOUND');
         if (dbUser) {
           user = dbUser;
         }
@@ -32,6 +35,7 @@ export async function createContext(
     }
   } catch (error) {
     // Authentication is optional for public procedures
+    console.log('[Auth Debug] Error:', error);
     user = null;
   }
 
