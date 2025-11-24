@@ -28,8 +28,8 @@ export type EnrichedConnectionProfile = {
   sector?: string;
   stage?: string;
   geography?: string;
-  checkSizeMin?: number;
-  checkSizeMax?: number;
+  checkSizeMin?: number | null;
+  checkSizeMax?: number | null;
   focusAreas?: string[];
   summary?: string;
   thesis?: string;
@@ -44,4 +44,25 @@ export type EnrichedConnectionProfile = {
   matchStatus?: "not_synced" | "synced" | "matched";
   investorId?: number;
   companyId?: number;
+  companyDetails?: {
+    name?: string;
+    website?: string;
+    description?: string;
+    stage?: string;
+    raising?: string;
+    headquarters?: string;
+    fundingTarget?: number | null;
+    fundingRaised?: number | null;
+    foundedYear?: number | null;
+  };
+  investorDetails?: {
+    firm?: string;
+    checkSizeMin?: number | null;
+    checkSizeMax?: number | null;
+    focusSectors?: string[];
+    focusStages?: string[];
+    focusGeographies?: string[];
+    pastInvestments?: string[];
+    bio?: string;
+  };
 };

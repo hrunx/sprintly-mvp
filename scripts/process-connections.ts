@@ -3,7 +3,7 @@ import "dotenv/config";
 import path from "path";
 import fs from "fs/promises";
 import { desc } from "drizzle-orm";
-import { parseLinkedInConnections, enrichConnection } from "../server/_core/connections/enrichment";
+import { enrichConnectionsFromCsv } from "../server/_core/connections/enrichment";
 import { loadConnectionProfiles, saveConnectionProfiles } from "../server/_core/connections/store";
 import { EnrichedConnectionProfile } from "../server/_core/connections/types";
 import { getDb, listAllCompanies, listAllInvestors } from "../server/db";
@@ -19,7 +19,7 @@ import { generateMatchesForCompany, generateMatchesForInvestor } from "../server
 async function parseCsv(limit: number) {
   const csvPath = path.resolve("..", "Connections.csv");
   const csvData = await fs.readFile(csvPath, "utf-8");
-  return parseLinkedInConnections(csvData, limit);
+  return enrichConnectionsFromCsv(csvData, limit);
 }
 
 async function syncProfilesToDatabase(profiles: EnrichedConnectionProfile[]) {
@@ -165,14 +165,7 @@ async function syncProfilesToDatabase(profiles: EnrichedConnectionProfile[]) {
 async function main() {
   const limit = Number(process.env.CONNECTION_LIMIT || 20);
   console.log(`🔍 Reading first ${limit} connections from Connections.csv...`);
-  const rows = await parseCsv(limit);
-
-  const enriched: EnrichedConnectionProfile[] = [];
-  for (const row of rows) {
-    console.log(`⚙️  Enriching ${row.firstName} ${row.lastName}...`);
-    const profile = await enrichConnection(row);
-    enriched.push(profile);
-  }
+  const enriched: EnrichedConnectionProfile[] = await parseCsv(limit);
 
   console.log("💾 Saving connection profiles cache...");
   await saveConnectionProfiles(enriched);

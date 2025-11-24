@@ -66,9 +66,27 @@ export function parseLinkedInConnections(csvData: string, limit = 20): LinkedInC
   return rows;
 }
 
-type LlmProfile = Partial<Pick<EnrichedConnectionProfile,
-  "role" | "sector" | "stage" | "geography" | "summary" | "thesis" | "focusAreas" | "checkSizeMin" | "checkSizeMax" | "tags" | "sources" | "accuracy"
->>;
+type LlmProfile = Partial<
+  Pick<
+    EnrichedConnectionProfile,
+    | "role"
+    | "sector"
+    | "stage"
+    | "geography"
+    | "summary"
+    | "thesis"
+    | "focusAreas"
+    | "checkSizeMin"
+    | "checkSizeMax"
+    | "tags"
+    | "sources"
+    | "accuracy"
+    | "companyDetails"
+    | "investorDetails"
+  >
+> & {
+  classificationConfidence?: number;
+};
 
 async function runLlmEnrichment(row: LinkedInConnectionRow): Promise<LlmProfile | null> {
   if (!process.env.OPENAI_API_KEY && !ENV.forgeApiKey) {
@@ -81,6 +99,7 @@ async function runLlmEnrichment(row: LinkedInConnectionRow): Promise<LlmProfile 
       type: "object",
       properties: {
         role: { type: "string", enum: ["investor", "founder", "operator"] },
+        classificationConfidence: { type: "number" },
         summary: { type: "string" },
         thesis: { type: "string" },
         sector: { type: "string" },
@@ -92,6 +111,35 @@ async function runLlmEnrichment(row: LinkedInConnectionRow): Promise<LlmProfile 
         tags: { type: "array", items: { type: "string" } },
         sources: { type: "array", items: { type: "string" } },
         accuracy: { type: "number" },
+        companyDetails: {
+          type: "object",
+          properties: {
+            name: { type: "string" },
+            website: { type: "string" },
+            description: { type: "string" },
+            stage: { type: "string" },
+            raising: { type: "string" },
+            headquarters: { type: "string" },
+            fundingTarget: { type: "number" },
+            fundingRaised: { type: "number" },
+            foundedYear: { type: "number" },
+          },
+          additionalProperties: true,
+        },
+        investorDetails: {
+          type: "object",
+          properties: {
+            firm: { type: "string" },
+            checkSizeMin: { type: "number" },
+            checkSizeMax: { type: "number" },
+            focusSectors: { type: "array", items: { type: "string" } },
+            focusStages: { type: "array", items: { type: "string" } },
+            focusGeographies: { type: "array", items: { type: "string" } },
+            pastInvestments: { type: "array", items: { type: "string" } },
+            bio: { type: "string" },
+          },
+          additionalProperties: true,
+        },
       },
       required: ["role", "accuracy"],
       additionalProperties: true,
@@ -103,7 +151,7 @@ async function runLlmEnrichment(row: LinkedInConnectionRow): Promise<LlmProfile 
     {
       role: "system" as const,
       content:
-        "You are an analyst enriching LinkedIn connection exports. Use only well-supported public information. If you are unsure, set fields to null/empty and keep accuracy low. Do not invent companies or achievements.",
+        "You are an analyst enriching LinkedIn connection exports. Emulate a deep web scan using public knowledge. If you are unsure, keep fields null/empty and keep accuracy low. Do not fabricate facts. Prefer concise bullet-like outputs.",
     },
     {
       role: "user" as const,
@@ -115,7 +163,7 @@ async function runLlmEnrichment(row: LinkedInConnectionRow): Promise<LlmProfile 
 - Email: ${row.email || "unknown"}
 - Connected On: ${row.connectedOn || "unknown"}
 
-Return concise factual enrichment.`,
+Return concise factual enrichment, classifying if they are an investor or founder, and include companyDetails (if founder/operator) or investorDetails (if investor).`,
     },
   ];
 
@@ -159,6 +207,7 @@ export async function enrichConnection(row: LinkedInConnectionRow): Promise<Enri
         row.title,
         ...(llmResult?.tags || []),
         ...(llmResult?.focusAreas || []),
+        ...(llmResult?.investorDetails?.pastInvestments || []),
       ]
         .filter(Boolean)
         .map(tag => String(tag)),
@@ -176,8 +225,8 @@ export async function enrichConnection(row: LinkedInConnectionRow): Promise<Enri
     sector: llmResult?.sector,
     stage: llmResult?.stage,
     geography: llmResult?.geography,
-    checkSizeMin: llmResult?.checkSizeMin,
-    checkSizeMax: llmResult?.checkSizeMax,
+    checkSizeMin: llmResult?.checkSizeMin ?? llmResult?.investorDetails?.checkSizeMin ?? null,
+    checkSizeMax: llmResult?.checkSizeMax ?? llmResult?.investorDetails?.checkSizeMax ?? null,
     focusAreas: llmResult?.focusAreas,
     summary:
       llmResult?.summary ||
@@ -192,5 +241,19 @@ export async function enrichConnection(row: LinkedInConnectionRow): Promise<Enri
     source: row,
     attachedFiles: [],
     matchStatus: "not_synced",
+    companyDetails: llmResult?.companyDetails,
+    investorDetails: llmResult?.investorDetails,
   };
+}
+
+export async function enrichConnectionsFromCsv(csvData: string, limit = 20) {
+  const rows = parseLinkedInConnections(csvData, limit);
+  const enriched: EnrichedConnectionProfile[] = [];
+
+  for (const row of rows) {
+    const profile = await enrichConnection(row);
+    enriched.push(profile);
+  }
+
+  return enriched;
 }

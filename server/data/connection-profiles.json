@@ -7,32 +7,30 @@
     "linkedinUrl": "https://www.linkedin.com/in/lama-osman-public",
     "role": "operator",
     "sector": "Technology",
-    "stage": "Growth",
-    "geography": "Middle East",
+    "stage": "Early Stage",
+    "geography": "UAE",
     "checkSizeMin": null,
     "checkSizeMax": null,
     "focusAreas": [
       "Business Development",
-      "Operational Strategy",
-      "Tech Solutions"
+      "Strategic Planning",
+      "Technology Solutions"
     ],
-    "summary": "Lama Osman has experience in strategic advisory roles specializing in business development and operational strategy.",
+    "summary": "Strategic Advisor with expertise in business development and strategic planning.",
     "thesis": null,
     "accuracy": 1,
     "confidence": 50,
     "tags": [
       "Touchbase FZC",
       "Strategic Advisor",
-      "Advisor",
-      "Tech",
       "Business Development",
-      "Operational Strategy",
-      "Tech Solutions"
+      "Strategic Planning",
+      "Technology Solutions"
     ],
     "sources": [
       "https://www.linkedin.com/in/lama-osman-public"
     ],
-    "lastEnrichedAt": "2025-11-24T14:23:48.155Z",
+    "lastEnrichedAt": "2025-11-24T14:32:26.516Z",
     "source": {
       "firstName": "Lama",
       "lastName": "(Masri) Osman",
@@ -43,7 +41,7 @@
       "connectedOn": "07 Nov 2025"
     },
     "attachedFiles": [],
-    "matchStatus": "synced",
+    "matchStatus": "not_synced",
     "companyId": 51
   },
   {
@@ -53,24 +51,27 @@
     "title": "Founder",
     "linkedinUrl": "https://www.linkedin.com/in/claudia-glass",
     "role": "founder",
-    "sector": null,
-    "stage": null,
+    "sector": "Technology",
+    "stage": "Early-stage",
     "geography": null,
     "checkSizeMin": null,
     "checkSizeMax": null,
     "focusAreas": [],
-    "summary": "Claudia Glass is the founder of Swijin, a company she launched to innovate within its specific sector.",
+    "summary": "Claudia Glass is the founder of Swijin, a company focused on innovative solutions in technology.",
     "thesis": null,
-    "accuracy": 1,
-    "confidence": 50,
+    "accuracy": 85,
+    "confidence": 85,
     "tags": [
       "Swijin",
-      "Founder"
+      "Founder",
+      "founder",
+      "technology",
+      "entrepreneurship"
     ],
     "sources": [
       "https://www.linkedin.com/in/claudia-glass"
     ],
-    "lastEnrichedAt": "2025-11-24T14:23:50.222Z",
+    "lastEnrichedAt": "2025-11-24T14:32:29.151Z",
     "source": {
       "firstName": "Claudia",
       "lastName": "Glass",
@@ -81,7 +82,7 @@
       "connectedOn": "07 Nov 2025"
     },
     "attachedFiles": [],
-    "matchStatus": "synced",
+    "matchStatus": "not_synced",
     "companyId": 52
   },
   {
@@ -91,32 +92,33 @@
     "title": "Python Developer",
     "linkedinUrl": "https://www.linkedin.com/in/muhammadgalhoum",
     "role": "operator",
-    "sector": "Technology",
+    "sector": "Information Technology",
     "stage": null,
-    "geography": null,
+    "geography": "United States",
     "checkSizeMin": null,
     "checkSizeMax": null,
     "focusAreas": [
-      "Software Development",
-      "Data Analysis",
-      "Python Programming"
+      "Python Development",
+      "Software Engineering",
+      "Data Analysis"
     ],
-    "summary": "Experienced Python Developer specializing in software development and data analysis.",
+    "summary": "Experienced Python Developer with a focus on software development and data analysis.",
     "thesis": null,
-    "accuracy": 90,
-    "confidence": 90,
+    "accuracy": 1,
+    "confidence": 50,
     "tags": [
       "Uniparticle",
       "Python Developer",
       "Python",
       "Software Development",
-      "Data Analysis",
-      "Python Programming"
+      "Python Development",
+      "Software Engineering",
+      "Data Analysis"
     ],
     "sources": [
       "https://www.linkedin.com/in/muhammadgalhoum"
     ],
-    "lastEnrichedAt": "2025-11-24T14:23:52.559Z",
+    "lastEnrichedAt": "2025-11-24T14:32:32.026Z",
     "source": {
       "firstName": "Muhammad",
       "lastName": "Galhoum",
@@ -127,7 +129,7 @@
       "connectedOn": "07 Nov 2025"
     },
     "attachedFiles": [],
-    "matchStatus": "synced",
+    "matchStatus": "not_synced",
     "companyId": 53
   },
   {
@@ -144,27 +146,27 @@
     "checkSizeMax": null,
     "focusAreas": [
       "Research and Development",
-      "Energy Solutions",
-      "Sustainability"
+      "Gas Solutions",
+      "Innovation"
     ],
-    "summary": "Experienced Head of Research and Development at Gasable, focused on innovative solutions in the energy sector.",
+    "summary": "Experienced professional heading research and development at Gasable, focusing on innovation in gas solutions.",
     "thesis": null,
-    "accuracy": 1,
-    "confidence": 50,
+    "accuracy": 85,
+    "confidence": 85,
     "tags": [
       "Gasable | غازابل",
       "Head of Research And Development",
-      "Research",
-      "Development",
+      "R&D",
       "Energy",
+      "Gas",
       "Research and Development",
-      "Energy Solutions",
-      "Sustainability"
+      "Gas Solutions",
+      "Innovation"
     ],
     "sources": [
       "https://www.linkedin.com/in/haroon-shafqat"
     ],
-    "lastEnrichedAt": "2025-11-24T14:23:55.358Z",
+    "lastEnrichedAt": "2025-11-24T14:32:34.465Z",
     "source": {
       "firstName": "Haroon",
       "lastName": "Shafqat",
@@ -175,7 +177,7 @@
       "connectedOn": "06 Nov 2025"
     },
     "attachedFiles": [],
-    "matchStatus": "synced",
+    "matchStatus": "not_synced",
     "companyId": 54
   },
   {
@@ -185,24 +187,26 @@
     "title": "Co-Founder & Managing Partner",
     "linkedinUrl": "https://www.linkedin.com/in/ga%C3%AAlle-bou-abdo-306119192",
     "role": "founder",
-    "sector": "Business Services",
+    "sector": "Finance",
     "stage": "Early Stage",
     "geography": null,
     "checkSizeMin": null,
     "checkSizeMax": null,
     "focusAreas": [],
-    "summary": "Co-Founder and Managing Partner at Ivy & Company, focused on innovative solutions in the business landscape.",
+    "summary": "Co-Founder and Managing Partner at Ivy & Company, specializing in investment and consulting services.",
     "thesis": null,
-    "accuracy": 85,
-    "confidence": 85,
+    "accuracy": 1,
+    "confidence": 50,
     "tags": [
       "Ivy & Company",
-      "Co-Founder & Managing Partner"
+      "Co-Founder & Managing Partner",
+      "Investment",
+      "Consulting"
     ],
     "sources": [
-      "LinkedIn"
+      "https://www.linkedin.com/in/ga%C3%AAlle-bou-abdo-306119192"
     ],
-    "lastEnrichedAt": "2025-11-24T14:23:58.997Z",
+    "lastEnrichedAt": "2025-11-24T14:32:37.132Z",
     "source": {
       "firstName": "Gaêlle",
       "lastName": "Bou Abdo",
@@ -213,7 +217,7 @@
       "connectedOn": "06 Nov 2025"
     },
     "attachedFiles": [],
-    "matchStatus": "synced",
+    "matchStatus": "not_synced",
     "companyId": 55
   },
   {
@@ -223,34 +227,34 @@
     "title": "SME’s Growth Programs Senior Specialist",
     "linkedinUrl": "https://www.linkedin.com/in/noura-a-62a0b11a3",
     "role": "operator",
-    "sector": "SME Development",
-    "stage": null,
+    "sector": "Business Development",
+    "stage": "Growth",
     "geography": "Saudi Arabia",
     "checkSizeMin": null,
     "checkSizeMax": null,
     "focusAreas": [
-      "SME Growth",
-      "Program Development",
-      "Entrepreneurship Support"
+      "SME Development",
+      "Economic Diversification",
+      "Capacity Building"
     ],
-    "summary": "Noura Al-Hamali is a Senior Specialist focused on the growth of small and medium enterprises (SMEs) at Monshaat, which is responsible for promoting and supporting the SME sector in Saudi Arabia.",
-    "thesis": null,
-    "accuracy": 85,
-    "confidence": 85,
+    "summary": "Specialist in growth programs for SMEs at MonshaatSA, focusing on enhancing the capabilities and sustainability of small and medium enterprises in Saudi Arabia.",
+    "thesis": "",
+    "accuracy": 80,
+    "confidence": 80,
     "tags": [
       "MonshaatSA",
       "SME’s Growth Programs Senior Specialist",
       "SME",
       "Growth Programs",
       "Saudi Arabia",
-      "SME Growth",
-      "Program Development",
-      "Entrepreneurship Support"
+      "SME Development",
+      "Economic Diversification",
+      "Capacity Building"
     ],
     "sources": [
       "https://www.linkedin.com/in/noura-a-62a0b11a3"
     ],
-    "lastEnrichedAt": "2025-11-24T14:24:02.140Z",
+    "lastEnrichedAt": "2025-11-24T14:32:40.187Z",
     "source": {
       "firstName": "Noura",
       "lastName": "Al-Hamali",
@@ -261,7 +265,7 @@
       "connectedOn": "06 Nov 2025"
     },
     "attachedFiles": [],
-    "matchStatus": "synced",
+    "matchStatus": "not_synced",
     "companyId": 56
   },
   {
@@ -270,34 +274,33 @@
     "company": "J.P. Morgan",
     "title": "Executive Director",
     "linkedinUrl": "https://www.linkedin.com/in/suela-rossberg-3b432518",
-    "role": "operator",
+    "role": "null",
     "sector": "Finance",
-    "stage": null,
-    "geography": "United States",
+    "stage": "null",
+    "geography": "null",
     "checkSizeMin": null,
     "checkSizeMax": null,
     "focusAreas": [
       "Investment Banking",
-      "Client Relationship Management",
-      "Corporate Finance"
+      "Asset Management"
     ],
-    "summary": "Experienced executive in financial services, with a demonstrated history in investment banking and client relationship management.",
-    "thesis": null,
+    "summary": "Executive Director at J.P. Morgan with expertise in finance and investment.",
+    "thesis": "null",
     "accuracy": 1,
     "confidence": 50,
     "tags": [
       "J.P. Morgan",
       "Executive Director",
       "Finance",
+      "Banking",
+      "Executive Leadership",
       "Investment Banking",
-      "Corporate Leadership",
-      "Client Relationship Management",
-      "Corporate Finance"
+      "Asset Management"
     ],
     "sources": [
       "https://www.linkedin.com/in/suela-rossberg-3b432518"
     ],
-    "lastEnrichedAt": "2025-11-24T14:24:04.763Z",
+    "lastEnrichedAt": "2025-11-24T14:32:42.825Z",
     "source": {
       "firstName": "Suela",
       "lastName": "Rossberg",
@@ -308,7 +311,7 @@
       "connectedOn": "06 Nov 2025"
     },
     "attachedFiles": [],
-    "matchStatus": "synced",
+    "matchStatus": "not_synced",
     "companyId": 57
   },
   {
@@ -318,35 +321,37 @@
     "title": "Founding Partner & CEO",
     "linkedinUrl": "https://www.linkedin.com/in/ataneja",
     "role": "founder",
-    "sector": "Venture Capital",
-    "stage": "Early-stage",
+    "sector": "Technology",
+    "stage": "Seed and early-stage",
     "geography": "India",
-    "checkSizeMin": 50000,
-    "checkSizeMax": 200000,
+    "checkSizeMin": 100000,
+    "checkSizeMax": 1000000,
     "focusAreas": [
-      "Technology",
-      "Consumer",
-      "Healthcare"
+      "Tech startups",
+      "Digital transformation",
+      "SaaS",
+      "Consumer tech"
     ],
-    "summary": "Ashish Taneja is the Founding Partner & CEO of growX ventures, an investment firm focused on early-stage companies in various sectors.",
-    "thesis": "Investing in innovative startups that leverage technology and address significant market needs.",
+    "summary": "Ashish Taneja is a venture capital professional with a focus on early-stage investments in technology-driven businesses. He is passionate about nurturing innovative companies and helping entrepreneurs succeed.",
+    "thesis": "Investing in technology companies that leverage digital transformation to disrupt traditional industries.",
     "accuracy": 1,
     "confidence": 50,
     "tags": [
       "growX ventures",
       "Founding Partner & CEO",
-      "venture capital",
-      "startups",
-      "early-stage investment",
-      "Technology",
-      "Consumer",
-      "Healthcare"
+      "Venture Capital",
+      "Entrepreneurship",
+      "Investment",
+      "Tech startups",
+      "Digital transformation",
+      "SaaS",
+      "Consumer tech"
     ],
     "sources": [
       "https://www.linkedin.com/in/ataneja",
-      "https://growx.vc/"
+      "growX ventures website"
     ],
-    "lastEnrichedAt": "2025-11-24T14:24:08.161Z",
+    "lastEnrichedAt": "2025-11-24T14:32:46.260Z",
     "source": {
       "firstName": "Ashish",
       "lastName": "Taneja",
@@ -357,7 +362,7 @@
       "connectedOn": "06 Nov 2025"
     },
     "attachedFiles": [],
-    "matchStatus": "synced",
+    "matchStatus": "not_synced",
     "companyId": 58
   },
   {
@@ -372,29 +377,19 @@
     "geography": null,
     "checkSizeMin": null,
     "checkSizeMax": null,
-    "focusAreas": [
-      "Investment Analysis",
-      "Financial Strategy",
-      "Market Research"
-    ],
-    "summary": "Senior Investment Analyst at Moores Rowland International with experience in financial analysis and investment strategies.",
+    "focusAreas": [],
+    "summary": "Senior Investment Analyst with a focus on financial analysis and investment strategies.",
     "thesis": null,
-    "accuracy": 1,
-    "confidence": 50,
+    "accuracy": 80,
+    "confidence": 80,
     "tags": [
       "Moores Rowland International",
-      "Senior Investment Analyst",
-      "Investment",
-      "Finance",
-      "Analyst",
-      "Investment Analysis",
-      "Financial Strategy",
-      "Market Research"
+      "Senior Investment Analyst"
     ],
     "sources": [
       "https://www.linkedin.com/in/sherif-elleithy-804038191"
     ],
-    "lastEnrichedAt": "2025-11-24T14:24:11.210Z",
+    "lastEnrichedAt": "2025-11-24T14:32:48.300Z",
     "source": {
       "firstName": "Sherif",
       "lastName": "Elleithy",
@@ -405,7 +400,7 @@
       "connectedOn": "06 Nov 2025"
     },
     "attachedFiles": [],
-    "matchStatus": "synced",
+    "matchStatus": "not_synced",
     "companyId": 59
   },
   {
@@ -415,24 +410,22 @@
     "title": "Founder",
     "linkedinUrl": "https://www.linkedin.com/in/georgekarani",
     "role": "founder",
-    "sector": null,
-    "stage": null,
-    "geography": null,
+    "sector": "",
+    "stage": "",
+    "geography": "",
     "checkSizeMin": null,
     "checkSizeMax": null,
     "focusAreas": [],
-    "summary": "Founder of Front Forum Focus, a company dedicated to building connections and communities around innovative ideas.",
-    "thesis": null,
-    "accuracy": 1,
+    "summary": "Connection from LinkedIn export (Founder at frontforumfocus)",
+    "thesis": "",
+    "accuracy": 0,
     "confidence": 50,
     "tags": [
       "frontforumfocus",
       "Founder"
     ],
-    "sources": [
-      "https://www.linkedin.com/in/georgekarani"
-    ],
-    "lastEnrichedAt": "2025-11-24T14:24:13.152Z",
+    "sources": [],
+    "lastEnrichedAt": "2025-11-24T14:32:49.579Z",
     "source": {
       "firstName": "George",
       "lastName": "Karani",
@@ -443,7 +436,7 @@
       "connectedOn": "06 Nov 2025"
     },
     "attachedFiles": [],
-    "matchStatus": "synced",
+    "matchStatus": "not_synced",
     "companyId": 60
   },
   {
@@ -453,33 +446,34 @@
     "title": "Managing Partner",
     "linkedinUrl": "https://www.linkedin.com/in/basilmoftah",
     "role": "investor",
-    "sector": "Finance",
-    "stage": "Seed to Series A",
-    "geography": "Middle East",
-    "checkSizeMin": 100000,
-    "checkSizeMax": 2000000,
+    "sector": "Venture Capital",
+    "stage": "Seed",
+    "geography": "Global",
+    "checkSizeMin": 500000,
+    "checkSizeMax": 3000000,
     "focusAreas": [
-      "Venture Capital",
-      "Private Equity",
-      "Financial Services"
+      "Technology",
+      "Healthcare",
+      "Consumer Goods"
     ],
-    "summary": "Managing Partner at Key Capital, focusing on venture investments and financial solutions.",
-    "thesis": "Investing in promising startups with strong growth potential.",
+    "summary": "Managing Partner at Key Capital, focusing on early-stage investments and venture capital opportunities.",
+    "thesis": "Investing in innovative startups with potential for significant growth.",
     "accuracy": 1,
     "confidence": 50,
     "tags": [
       "Key Capital",
       "Managing Partner",
-      "Venture Capital",
-      "Investment",
-      "Finance",
-      "Private Equity",
-      "Financial Services"
+      "venture capital",
+      "seed funding",
+      "startup investments",
+      "Technology",
+      "Healthcare",
+      "Consumer Goods"
     ],
     "sources": [
-      "LinkedIn"
+      "https://www.linkedin.com/in/basilmoftah"
     ],
-    "lastEnrichedAt": "2025-11-24T14:24:15.249Z",
+    "lastEnrichedAt": "2025-11-24T14:32:52.031Z",
     "source": {
       "firstName": "Basil",
       "lastName": "Moftah",
@@ -490,7 +484,7 @@
       "connectedOn": "05 Nov 2025"
     },
     "attachedFiles": [],
-    "matchStatus": "matched",
+    "matchStatus": "not_synced",
     "investorId": 81
   },
   {
@@ -501,32 +495,32 @@
     "linkedinUrl": "https://www.linkedin.com/in/ahmedkady",
     "role": "operator",
     "sector": "Technology",
-    "stage": null,
+    "stage": "Growth",
     "geography": null,
     "checkSizeMin": null,
     "checkSizeMax": null,
     "focusAreas": [
-      "Digital Products",
-      "Product Management",
-      "User Experience"
+      "Digital products",
+      "Product management",
+      "User experience"
     ],
-    "summary": "Experienced Digital Product Manager with a background in developing and optimizing digital products.",
+    "summary": "Digital Product Manager with experience in developing and managing digital products, focusing on user experience and market needs.",
     "thesis": null,
-    "accuracy": 1,
-    "confidence": 50,
+    "accuracy": 80,
+    "confidence": 80,
     "tags": [
       "ContactNow",
       "Digital Product Manager",
-      "Digital Product Management",
-      "Technology",
-      "User Experience",
-      "Digital Products",
-      "Product Management"
+      "Product Management",
+      "Digital Strategy",
+      "Digital products",
+      "Product management",
+      "User experience"
     ],
     "sources": [
-      "https://www.linkedin.com/in/ahmedkady"
+      "LinkedIn"
     ],
-    "lastEnrichedAt": "2025-11-24T14:24:17.532Z",
+    "lastEnrichedAt": "2025-11-24T14:32:54.630Z",
     "source": {
       "firstName": "Ahmed",
       "lastName": "El-Kady",
@@ -537,7 +531,7 @@
       "connectedOn": "04 Nov 2025"
     },
     "attachedFiles": [],
-    "matchStatus": "synced",
+    "matchStatus": "not_synced",
     "companyId": 61
   },
   {
@@ -547,36 +541,34 @@
     "title": "Head of Commercial and Global Growth. (Remittances & Cross-Border Payment) (Founding team)",
     "linkedinUrl": "https://www.linkedin.com/in/marwanhassaan101",
     "role": "operator",
-    "sector": "Financial Technology",
-    "stage": "Seed",
+    "sector": "fintech",
+    "stage": "early",
     "geography": null,
     "checkSizeMin": null,
     "checkSizeMax": null,
     "focusAreas": [
-      "Remittances",
-      "Cross-Border Payments",
-      "Financial Inclusion"
+      "remittances",
+      "cross-border payments",
+      "financial technology"
     ],
-    "summary": "Experienced leader in commercial strategy and global growth focused on remittances and cross-border payments.",
+    "summary": "Marwan Hassaan is responsible for driving commercial strategy and global growth initiatives at Munify, focusing on remittances and cross-border payments. As a founding team member, he plays a crucial role in shaping the company's growth trajectory in the fintech sector.",
     "thesis": null,
-    "accuracy": 80,
-    "confidence": 80,
+    "accuracy": 1,
+    "confidence": 50,
     "tags": [
       "Munify (YC S25)",
       "Head of Commercial and Global Growth. (Remittances & Cross-Border Payment) (Founding team)",
-      "Fintech",
-      "Payments",
-      "Growth Strategy",
-      "Startup",
-      "Remittances",
-      "Cross-Border Payments",
-      "Financial Inclusion"
+      "fintech",
+      "payments",
+      "growth",
+      "remittances",
+      "cross-border payments",
+      "financial technology"
     ],
     "sources": [
-      "Munify Company Website",
-      "Y Combinator Website"
+      "LinkedIn"
     ],
-    "lastEnrichedAt": "2025-11-24T14:24:20.189Z",
+    "lastEnrichedAt": "2025-11-24T14:32:57.611Z",
     "source": {
       "firstName": "Marwan",
       "lastName": "Hassaan",
@@ -587,7 +579,7 @@
       "connectedOn": "04 Nov 2025"
     },
     "attachedFiles": [],
-    "matchStatus": "synced",
+    "matchStatus": "not_synced",
     "companyId": 62
   },
   {
@@ -597,37 +589,33 @@
     "title": "Business Coach",
     "linkedinUrl": "https://www.linkedin.com/in/jaynudeh",
     "role": "operator",
-    "sector": "business consulting",
+    "sector": "Consulting",
     "stage": null,
     "geography": null,
     "checkSizeMin": null,
     "checkSizeMax": null,
     "focusAreas": [
-      "leadership development",
-      "organizational growth",
-      "team building",
-      "communication skills"
+      "Business Coaching",
+      "Strategic Consulting",
+      "Performance Improvement"
     ],
-    "summary": "Business coach specializing in leadership development and organizational growth.",
+    "summary": "Jay Udeh is a Business Coach at Sensei Consulting, providing strategic advisory services to businesses to help enhance their performance and growth.",
     "thesis": null,
     "accuracy": 1,
     "confidence": 50,
     "tags": [
       "Sensei Consulting",
       "Business Coach",
-      "business coach",
-      "leadership",
-      "consulting",
-      "team development",
-      "leadership development",
-      "organizational growth",
-      "team building",
-      "communication skills"
+      "Consultant",
+      "Strategic Advisor",
+      "Business Coaching",
+      "Strategic Consulting",
+      "Performance Improvement"
     ],
     "sources": [
       "https://www.linkedin.com/in/jaynudeh"
     ],
-    "lastEnrichedAt": "2025-11-24T14:24:23.138Z",
+    "lastEnrichedAt": "2025-11-24T14:33:00.157Z",
     "source": {
       "firstName": "Jay",
       "lastName": "Udeh",
@@ -638,7 +626,7 @@
       "connectedOn": "04 Nov 2025"
     },
     "attachedFiles": [],
-    "matchStatus": "synced",
+    "matchStatus": "not_synced",
     "companyId": 63
   },
   {
@@ -649,32 +637,32 @@
     "linkedinUrl": "https://www.linkedin.com/in/hossam-shafick",
     "role": "investor",
     "sector": "Technology",
-    "stage": "Early-stage",
-    "geography": "Global, with a focus on the MENA region",
-    "checkSizeMin": 100000,
-    "checkSizeMax": 1000000,
+    "stage": "Seed to Series A",
+    "geography": "MENA Region",
+    "checkSizeMin": 500000,
+    "checkSizeMax": 2000000,
     "focusAreas": [
       "Technology",
-      "Digital Transformation",
-      "Startups"
+      "Innovation",
+      "Emerging Markets"
     ],
-    "summary": "Hossam Shafick is a Principal at Silicon Badia, where he focuses on investment opportunities primarily in technology and early-stage ventures.",
-    "thesis": "Investing in innovative technologies and startups that drive digital transformation and foster new business models.",
+    "summary": "Hossam Shafick is a Principal at Silicon Badia, focusing on investments in technology and innovation across various sectors.",
+    "thesis": "Investing in early-stage technology-driven companies in emerging markets.",
     "accuracy": 1,
     "confidence": 50,
     "tags": [
       "Silicon Badia",
       "Principal",
-      "Venture Capital",
-      "Investment",
-      "Startups",
+      "VC",
+      "Emerging Markets",
+      "Tech Investments",
       "Technology",
-      "Digital Transformation"
+      "Innovation"
     ],
     "sources": [
-      "https://www.linkedin.com/in/hossam-shafick"
+      "LinkedIn"
     ],
-    "lastEnrichedAt": "2025-11-24T14:24:26.880Z",
+    "lastEnrichedAt": "2025-11-24T14:33:02.898Z",
     "source": {
       "firstName": "Hossam",
       "lastName": "Shafick",
@@ -685,7 +673,7 @@
       "connectedOn": "04 Nov 2025"
     },
     "attachedFiles": [],
-    "matchStatus": "matched",
+    "matchStatus": "not_synced",
     "investorId": 82
   },
   {
@@ -696,30 +684,31 @@
     "linkedinUrl": "https://www.linkedin.com/in/omard1aa",
     "email": "omardiaa27@gmail.com",
     "role": "operator",
-    "sector": "Technology",
+    "sector": "Information Technology",
     "stage": null,
     "geography": null,
     "checkSizeMin": null,
     "checkSizeMax": null,
     "focusAreas": [
       "Software Development",
-      "Technology Integration"
+      "IT Solutions"
     ],
-    "summary": "Senior Software Engineer with experience in delivering software solutions at DXC Technology, focusing on technology integration and software development.",
+    "summary": "Experienced Senior Software Engineer specializing in software development and IT solutions.",
     "thesis": null,
-    "accuracy": 80,
-    "confidence": 80,
+    "accuracy": 85,
+    "confidence": 85,
     "tags": [
       "DXC Technology",
       "Senior Software Engineer",
-      "Software Engineering",
+      "Software Engineer",
+      "Technology",
       "Software Development",
-      "Technology Integration"
+      "IT Solutions"
     ],
     "sources": [
       "https://www.linkedin.com/in/omard1aa"
     ],
-    "lastEnrichedAt": "2025-11-24T14:24:30.036Z",
+    "lastEnrichedAt": "2025-11-24T14:33:05.354Z",
     "source": {
       "firstName": "Omar",
       "lastName": "Diaa",
@@ -730,7 +719,7 @@
       "connectedOn": "04 Nov 2025"
     },
     "attachedFiles": [],
-    "matchStatus": "synced",
+    "matchStatus": "not_synced",
     "companyId": 64
   },
   {
@@ -739,9 +728,9 @@
     "company": "EEIC مركز مصر لريادة الأعمال والابتكار",
     "title": "Master Candidate",
     "linkedinUrl": "https://www.linkedin.com/in/marwa-mohamed55",
-    "role": "null",
-    "sector": "Entrepreneurship and Innovation",
-    "stage": "null",
+    "role": "operator",
+    "sector": "Entrepreneurship",
+    "stage": null,
     "geography": "Egypt",
     "checkSizeMin": null,
     "checkSizeMax": null,
@@ -749,20 +738,21 @@
       "Entrepreneurship",
       "Innovation"
     ],
-    "summary": "Graduate candidate interested in entrepreneurship and innovation.",
-    "thesis": "null",
+    "summary": "Marwa Mohamed is currently a Master's candidate focusing on entrepreneurship and innovation. She is associated with the EEIC Center for Entrepreneurship and Innovation in Egypt, where she is likely gaining relevant experience and skills in these fields.",
+    "thesis": null,
     "accuracy": 1,
     "confidence": 50,
     "tags": [
       "EEIC مركز مصر لريادة الأعمال والابتكار",
       "Master Candidate",
       "Entrepreneurship",
-      "Innovation"
+      "Innovation",
+      "Master's Candidate"
     ],
     "sources": [
       "https://www.linkedin.com/in/marwa-mohamed55"
     ],
-    "lastEnrichedAt": "2025-11-24T14:24:32.302Z",
+    "lastEnrichedAt": "2025-11-24T14:33:09.031Z",
     "source": {
       "firstName": "Marwa",
       "lastName": "Mohamed",
@@ -773,7 +763,7 @@
       "connectedOn": "04 Nov 2025"
     },
     "attachedFiles": [],
-    "matchStatus": "synced",
+    "matchStatus": "not_synced",
     "companyId": 65
   },
   {
@@ -783,34 +773,32 @@
     "title": "Chief Executive Officer",
     "linkedinUrl": "https://www.linkedin.com/in/rosshartmann",
     "role": "operator",
-    "sector": "Artificial Intelligence",
-    "stage": null,
+    "sector": "Technology",
+    "stage": "Growth",
     "geography": null,
     "checkSizeMin": null,
     "checkSizeMax": null,
     "focusAreas": [
-      "AI solutions",
-      "Machine learning",
-      "Data analytics"
+      "Artificial Intelligence",
+      "Technology Solutions"
     ],
-    "summary": "Ross Hartmann is the Chief Executive Officer at Kiingo AI, where he leads strategic initiatives and innovation in the field of artificial intelligence.",
+    "summary": "Ross Hartmann is the Chief Executive Officer at Kiingo AI, focusing on AI and technology solutions.",
     "thesis": null,
-    "accuracy": 90,
-    "confidence": 90,
+    "accuracy": 1,
+    "confidence": 50,
     "tags": [
       "Kiingo AI",
       "Chief Executive Officer",
       "CEO",
+      "Tech Executive",
+      "AI Leadership",
       "Artificial Intelligence",
-      "Leadership",
-      "AI solutions",
-      "Machine learning",
-      "Data analytics"
+      "Technology Solutions"
     ],
     "sources": [
       "https://www.linkedin.com/in/rosshartmann"
     ],
-    "lastEnrichedAt": "2025-11-24T14:24:35.268Z",
+    "lastEnrichedAt": "2025-11-24T14:33:11.772Z",
     "source": {
       "firstName": "Ross",
       "lastName": "Hartmann",
@@ -821,7 +809,7 @@
       "connectedOn": "31 Oct 2025"
     },
     "attachedFiles": [],
-    "matchStatus": "synced",
+    "matchStatus": "not_synced",
     "companyId": 66
   },
   {
@@ -831,35 +819,33 @@
     "title": "President of Bereano Partners | Digital Marketing Strategies For A Digital-First Economy",
     "linkedinUrl": "https://www.linkedin.com/in/joshbereano",
     "role": "operator",
-    "sector": "Marketing",
-    "stage": "Growth",
-    "geography": "Unknown",
+    "sector": "Marketing and Advertising",
+    "stage": "null",
+    "geography": "null",
     "checkSizeMin": null,
     "checkSizeMax": null,
     "focusAreas": [
       "Digital Marketing",
-      "Customer Engagement",
-      "Marketing Technology",
-      "Data Analytics"
+      "Business Growth",
+      "Customer Engagement"
     ],
-    "summary": "President of Bereano Partners specializing in digital marketing strategies.",
-    "thesis": "Digital-first strategies that leverage marketing technology and data analytics to enhance customer engagement and business growth.",
-    "accuracy": 1,
-    "confidence": 50,
+    "summary": "Josh Bereano is the President of Bereano Partners, specializing in digital marketing strategies tailored for a digital-first economy.",
+    "thesis": "Focuses on creating and implementing effective digital marketing strategies to enhance business growth and engagement in a digitally driven market.",
+    "accuracy": 90,
+    "confidence": 90,
     "tags": [
       "Bereano Partners",
       "President of Bereano Partners | Digital Marketing Strategies For A Digital-First Economy",
       "Digital Marketing",
-      "Entrepreneur",
-      "CEO",
-      "Customer Engagement",
-      "Marketing Technology",
-      "Data Analytics"
+      "Business Development",
+      "Strategy",
+      "Business Growth",
+      "Customer Engagement"
     ],
     "sources": [
-      "LinkedIn: https://www.linkedin.com/in/joshbereano"
+      "https://www.linkedin.com/in/joshbereano"
     ],
-    "lastEnrichedAt": "2025-11-24T14:24:37.804Z",
+    "lastEnrichedAt": "2025-11-24T14:33:14.980Z",
     "source": {
       "firstName": "Josh",
       "lastName": "Bereano",
@@ -870,7 +856,7 @@
       "connectedOn": "30 Oct 2025"
     },
     "attachedFiles": [],
-    "matchStatus": "synced",
+    "matchStatus": "not_synced",
     "companyId": 67
   },
   {
@@ -880,17 +866,16 @@
     "title": "University Professor, Tourism Guidance Department, Faculty of Tourism and Hotel Management",
     "linkedinUrl": "https://www.linkedin.com/in/khaled-el-enany-ezz-61541919",
     "role": "null",
-    "sector": "Education, Tourism",
+    "sector": "Education",
     "stage": "null",
-    "geography": "Egypt",
+    "geography": "Cairo, Egypt",
     "checkSizeMin": null,
     "checkSizeMax": null,
     "focusAreas": [
-      "Tourism Management",
-      "Tourism Guidance",
-      "Hotel Management"
+      "Tourism Education",
+      "Hospitality Management"
     ],
-    "summary": "Khaled El-Enany Ezz is a professor specializing in tourism guidance at Helwan University in Cairo.",
+    "summary": "Khaled El-Enany Ezz is a University Professor specializing in the Tourism Guidance Department at Helwan University in Cairo, Egypt. He has a background in tourism and hotel management education.",
     "thesis": "null",
     "accuracy": 1,
     "confidence": 50,
@@ -899,15 +884,14 @@
       "University Professor, Tourism Guidance Department, Faculty of Tourism and Hotel Management",
       "University Professor",
       "Tourism",
-      "Helwan University",
-      "Tourism Management",
-      "Tourism Guidance",
-      "Hotel Management"
+      "Hospitality",
+      "Tourism Education",
+      "Hospitality Management"
     ],
     "sources": [
-      "https://www.linkedin.com/in/khaled-el-enany-ezz-61541919"
+      "LinkedIn"
     ],
-    "lastEnrichedAt": "2025-11-24T14:24:40.415Z",
+    "lastEnrichedAt": "2025-11-24T14:33:17.986Z",
     "source": {
       "firstName": "Khaled",
       "lastName": "El-Enany Ezz",
@@ -918,7 +902,7 @@
       "connectedOn": "30 Oct 2025"
     },
     "attachedFiles": [],
-    "matchStatus": "synced",
+    "matchStatus": "not_synced",
     "companyId": 68
   }
 ]

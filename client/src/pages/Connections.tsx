@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -13,6 +13,7 @@ import {
   Database,
   Rocket,
   Link as LinkIcon,
+  FileUp,
 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
@@ -41,6 +42,7 @@ function formatConfidence(value?: number | null) {
 }
 
 export default function Connections() {
+  const [csvData, setCsvData] = useState<string>("");
   const { data: profiles = [], isLoading, refetch } = trpc.connections.list.useQuery();
 
   const syncMutation = trpc.connections.syncLinkedIn.useMutation({
@@ -69,6 +71,17 @@ export default function Connections() {
     onError: (error) => toast.error(error.message || "Failed to attach file"),
   });
 
+  const ingestCsvMutation = trpc.connections.ingestCsv.useMutation({
+    onSuccess: (res) => {
+      toast.success(`Processed ${res.imported} contacts from upload`, {
+        description: `Investors added: ${res.db.investorsAdded}, Companies added: ${res.db.companiesAdded}`,
+      });
+      setCsvData("");
+      refetch();
+    },
+    onError: (error) => toast.error(error.message || "Failed to process CSV"),
+  });
+
   const pushMutation = trpc.connections.pushToMatching.useMutation({
     onSuccess: (res) => {
       toast.success("Sent to matching engine", {
@@ -84,6 +97,16 @@ export default function Connections() {
       [...profiles].sort((a, b) => (b.accuracy || 0) - (a.accuracy || 0)),
     [profiles],
   );
+
+  const handleCsvUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      setCsvData(reader.result as string);
+    };
+    reader.readAsText(file);
+  };
 
   const handleUpload = (id: string) => {
     const input = document.createElement("input");
@@ -131,6 +154,44 @@ export default function Connections() {
           </Button>
         </div>
       </div>
+
+      <Card className="border-2">
+        <CardHeader>
+          <CardTitle>Upload LinkedIn CSV</CardTitle>
+          <CardDescription>Drop your LinkedIn connections export to auto-enrich and push into matching.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="border-2 border-dashed rounded-lg p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <FileUp className="h-5 w-5 text-primary" />
+              <div>
+                <p className="font-semibold">Upload CSV</p>
+                <p className="text-sm text-muted-foreground">Supports the standard LinkedIn connections export.</p>
+              </div>
+            </div>
+            <div className="flex flex-col md:flex-row gap-2">
+              <input type="file" accept=".csv" onChange={handleCsvUpload} className="hidden" id="connection-upload" />
+              <label htmlFor="connection-upload">
+                <Button variant="outline" asChild>
+                  <span>Choose CSV</span>
+                </Button>
+              </label>
+              <Button
+                onClick={() => ingestCsvMutation.mutate({ csvData, limit: 20 })}
+                disabled={!csvData || ingestCsvMutation.isPending}
+              >
+                {ingestCsvMutation.isPending ? <Clock className="h-4 w-4 animate-spin mr-2" /> : <Rocket className="h-4 w-4 mr-2" />}
+                Process uploaded CSV
+              </Button>
+            </div>
+          </div>
+          {csvData && (
+            <p className="text-xs text-muted-foreground">
+              Loaded file with {csvData.split("\n").length - 1} rows. Click “Process uploaded CSV” to enrich and sync.
+            </p>
+          )}
+        </CardContent>
+      </Card>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {benefits.map(benefit => (

@@ -17,7 +17,7 @@ import {
 import { generateMatchesForCompany, generateMatchesForInvestor } from "./_core/matchingExecutor";
 import { getCsvLines, splitCsvLine } from "./_core/csvParser";
 import path from "path";
-import { parseLinkedInConnections, enrichConnection } from "./_core/connections/enrichment";
+import { parseLinkedInConnections, enrichConnection, enrichConnectionsFromCsv } from "./_core/connections/enrichment";
 import { loadConnectionProfiles, saveConnectionProfiles, upsertProfile } from "./_core/connections/store";
 import { EnrichedConnectionProfile } from "./_core/connections/types";
 
@@ -87,18 +87,26 @@ async function syncProfilesToDatabase(
     if (profile.role === "investor") {
       const normalized = normalizeInvestorRecord({
         name: profile.fullName,
-        firm: profile.company || "Independent",
+        firm: profile.investorDetails?.firm || profile.company || "Independent",
         title: profile.title,
         email: profile.email,
         linkedin: profile.linkedinUrl,
-        sector: profile.sector || profile.focusAreas?.[0],
-        stage: profile.stage,
-        geography: profile.geography,
-        checkSizeMin: profile.checkSizeMin,
-        checkSizeMax: profile.checkSizeMax,
+        sector:
+          profile.sector ||
+          profile.focusAreas?.[0] ||
+          profile.investorDetails?.focusSectors?.[0],
+        stage: profile.stage || profile.investorDetails?.focusStages?.[0],
+        geography:
+          profile.geography || profile.investorDetails?.focusGeographies?.[0],
+        checkSizeMin: profile.checkSizeMin ?? profile.investorDetails?.checkSizeMin,
+        checkSizeMax: profile.checkSizeMax ?? profile.investorDetails?.checkSizeMax,
         thesis: profile.thesis || profile.summary,
-        focusSectors: profile.focusAreas,
+        focusSectors: profile.investorDetails?.focusSectors ?? profile.focusAreas,
+        focusStages: profile.investorDetails?.focusStages,
+        focusGeographies: profile.investorDetails?.focusGeographies,
         tags: profile.tags,
+        bio: profile.investorDetails?.bio,
+        notableInvestments: profile.investorDetails?.pastInvestments?.join(", "),
       });
 
       const keys = getInvestorDedupKeys(normalized);
@@ -136,14 +144,21 @@ async function syncProfilesToDatabase(
       }
     } else if (profile.role === "founder") {
       const normalizedCompany = normalizeCompanyRecord({
-        name: profile.company || `${profile.fullName}'s Company`,
-        description: profile.summary,
+        name:
+          profile.companyDetails?.name ||
+          profile.company ||
+          `${profile.fullName}'s Company`,
+        description: profile.companyDetails?.description || profile.summary,
         sector: profile.sector || profile.focusAreas?.[0],
-        geography: profile.geography,
-        stage: profile.stage,
+        geography: profile.geography || profile.companyDetails?.headquarters,
+        stage: profile.stage || profile.companyDetails?.stage,
         founderName: profile.fullName,
         founderEmail: profile.email,
         founderLinkedin: profile.linkedinUrl,
+        fundingTarget: profile.companyDetails?.fundingTarget ?? undefined,
+        fundingRaised: profile.companyDetails?.fundingRaised ?? undefined,
+        foundedYear: profile.companyDetails?.foundedYear ?? undefined,
+        website: profile.companyDetails?.website,
         tags: profile.tags,
       });
 
@@ -480,6 +495,31 @@ export const appRouter = router({
     list: publicProcedure.query(async () => {
       return loadConnectionProfiles();
     }),
+
+    ingestCsv: protectedProcedure
+      .input(z.object({ csvData: z.string(), limit: z.number().min(1).max(50).optional() }))
+      .mutation(async ({ input }) => {
+        const limit = input.limit ?? 20;
+        const enriched = await enrichConnectionsFromCsv(input.csvData, limit);
+
+        let merged = await loadConnectionProfiles();
+        enriched.forEach(profile => {
+          merged = upsertProfile(merged, profile);
+        });
+
+        const syncResult = await syncProfilesToDatabase(merged);
+        await saveConnectionProfiles(syncResult.profiles);
+
+        return {
+          imported: enriched.length,
+          profiles: syncResult.profiles,
+          db: {
+            investorsAdded: syncResult.investorsAdded,
+            companiesAdded: syncResult.companiesAdded,
+            matchesGenerated: syncResult.matchesGenerated,
+          },
+        };
+      }),
 
     syncLinkedIn: protectedProcedure
       .input(z.object({ limit: z.number().min(1).max(50).optional() }).optional())
