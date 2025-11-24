@@ -17,7 +17,8 @@ set -a
 source "$ENV_FILE"
 set +a
 
-export DATABASE_URL="${DATABASE_URL:-mysql://sprintly:sprintly@localhost:3307/sprintly}"
+# Force local DB for Docker Desktop bridge
+export DATABASE_URL="mysql://sprintly:sprintly@localhost:3307/sprintly"
 
 if [[ ! -d node_modules ]]; then
   echo "📥 Installing dependencies..."
