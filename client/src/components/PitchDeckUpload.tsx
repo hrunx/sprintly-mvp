@@ -6,6 +6,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Upload, FileText, Sparkles, CheckCircle2, XCircle, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { trpc } from "@/lib/trpc";
 
 interface ExtractedMetrics {
   revenue?: string;
@@ -20,16 +21,17 @@ interface ExtractedMetrics {
 
 interface PitchDeckUploadProps {
   companyId: number;
+  companyName: string;
   onSuccess?: (metrics: ExtractedMetrics) => void;
 }
 
-export function PitchDeckUpload({ companyId, onSuccess }: PitchDeckUploadProps) {
+export function PitchDeckUpload({ companyId, companyName, onSuccess }: PitchDeckUploadProps) {
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
-  const [analyzing, setAnalyzing] = useState(false);
   const [progress, setProgress] = useState(0);
   const [extractedMetrics, setExtractedMetrics] = useState<ExtractedMetrics | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const uploadMutation = trpc.companies.uploadFile.useMutation();
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
@@ -87,19 +89,39 @@ export function PitchDeckUpload({ companyId, onSuccess }: PitchDeckUploadProps) 
     if (!file) return;
 
     setUploading(true);
-    setAnalyzing(true);
     setProgress(0);
     setError(null);
 
     try {
+      // Read file as base64
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve((reader.result as string).split(",").pop() || "");
+        reader.onerror = () => reject(reader.error);
+        reader.readAsDataURL(file);
+      });
+
+      setProgress(35);
+      toast.info("Uploading pitch deck...");
+
+      await uploadMutation.mutateAsync({
+        companyName,
+        companyId,
+        fileName: file.name,
+        mimeType: file.type,
+        dataBase64: base64,
+      });
+
+      setProgress(70);
       await simulateAnalysis();
-      toast.success("Pitch deck analyzed successfully!");
+
+      setProgress(100);
+      toast.success("Pitch deck uploaded and analysis stored!");
     } catch (err: any) {
       setError(err.message || "Failed to analyze pitch deck");
       toast.error("Analysis failed");
     } finally {
       setUploading(false);
-      setAnalyzing(false);
     }
   };
 

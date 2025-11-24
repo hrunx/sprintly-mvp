@@ -249,7 +249,7 @@ export default function CompanyProfile() {
       </div>
 
       {/* Pitch Deck Upload */}
-      <PitchDeckUpload companyId={companyId} />
+      <PitchDeckUpload companyId={companyId} companyName={company.name} />
 
       {/* Founder Information */}
       {company.founderName && (

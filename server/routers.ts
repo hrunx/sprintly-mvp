@@ -20,6 +20,7 @@ import path from "path";
 import { parseLinkedInConnections, enrichConnection, enrichConnectionsFromCsv } from "./_core/connections/enrichment";
 import { loadConnectionProfiles, saveConnectionProfiles, upsertProfile } from "./_core/connections/store";
 import { EnrichedConnectionProfile } from "./_core/connections/types";
+import { storagePut } from "./storage";
 
 const LINKEDIN_EXPORT_PATH = path.resolve(process.cwd(), "../Connections.csv");
 
@@ -750,6 +751,65 @@ export const appRouter = router({
       .query(async ({ input }) => {
         const { getCompanyById } = await import("./db");
         return getCompanyById(input.id);
+      }),
+
+    uploadFile: protectedProcedure
+      .input(z.object({
+        companyName: z.string().optional(),
+        companyId: z.number().optional(),
+        fileName: z.string(),
+        mimeType: z.string(),
+        dataBase64: z.string(),
+      }))
+      .mutation(async ({ input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not available" });
+
+        let company = null;
+        if (input.companyId) {
+          const rows = await db.select().from(companies).where(eq(companies.id, input.companyId)).limit(1);
+          company = rows[0] || null;
+        }
+        if (!company && input.companyName) {
+          const rows = await db.select().from(companies).where(eq(companies.name, input.companyName)).limit(1);
+          company = rows[0] || null;
+        }
+        if (!company) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "Company not found for uploaded file" });
+        }
+
+        let fileUrl: string | null = null;
+        try {
+          const payload = input.dataBase64.startsWith("data:")
+            ? input.dataBase64.split(",").slice(1).join(",")
+            : input.dataBase64;
+          const buffer = Buffer.from(payload, "base64");
+          const stored = await storagePut(
+            `pitchdecks/${company.id}-${Date.now()}-${input.fileName}`,
+            buffer,
+            input.mimeType,
+          );
+          fileUrl = stored.url;
+        } catch (error) {
+          console.warn("[Upload] Failed to store file via storage proxy, falling back to data URL", error);
+          fileUrl = input.dataBase64;
+        }
+
+        await db
+          .update(companies)
+          .set({
+            pitchDeckUrl: fileUrl,
+            updatedAt: new Date(),
+          })
+          .where(eq(companies.id, company.id));
+
+        try {
+          await generateMatchesForCompany(company.id);
+        } catch (error) {
+          console.warn("[Matching] Failed to refresh matches after file upload", error);
+        }
+
+        return { success: true, companyId: company.id, pitchDeckUrl: fileUrl };
       }),
   }),
 

@@ -246,7 +246,17 @@ export default function Connections() {
       ) : (
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
           {orderedProfiles.map(profile => (
-            <Card key={profile.id} className="border-2 hover:shadow-lg transition-shadow">
+            <Card
+              key={profile.id}
+              className="border-2 hover:shadow-lg transition-shadow cursor-pointer"
+              onClick={() => {
+                if (profile.investorId) {
+                  window.location.href = `/investor/${profile.investorId}`;
+                } else if (profile.companyId) {
+                  window.location.href = `/company/${profile.companyId}`;
+                }
+              }}
+            >
               <CardHeader className="flex flex-row items-start justify-between gap-3">
                 <div>
                   <CardTitle className="text-xl">{profile.fullName}</CardTitle>
@@ -255,6 +265,12 @@ export default function Connections() {
                   </CardDescription>
                   <div className="flex flex-wrap gap-2 mt-2">
                     <Badge variant="secondary" className="capitalize">{profile.role}</Badge>
+                    {profile.confidence >= 90 && profile.role === "founder" && (
+                      <Badge variant="default">Startup</Badge>
+                    )}
+                    {profile.confidence >= 90 && profile.role === "investor" && (
+                      <Badge variant="default">Investor</Badge>
+                    )}
                     <Badge variant="outline">Accuracy {formatConfidence(profile.accuracy)}</Badge>
                     <Badge variant="outline">
                       {profile.matchStatus === "matched" ? "Matches ready" : "Pending matchmaking"}

@@ -140,33 +140,21 @@
     "linkedinUrl": "https://www.linkedin.com/in/haroon-shafqat",
     "role": "operator",
     "sector": "Energy",
-    "stage": null,
-    "geography": null,
+    "stage": "Growth",
+    "geography": "Unknown",
     "checkSizeMin": null,
     "checkSizeMax": null,
-    "focusAreas": [
-      "Research and Development",
-      "Gas Solutions",
-      "Innovation"
-    ],
-    "summary": "Experienced professional heading research and development at Gasable, focusing on innovation in gas solutions.",
-    "thesis": null,
-    "accuracy": 85,
-    "confidence": 85,
+    "focusAreas": [],
+    "summary": "Head of Research And Development at Gasable, focused on innovative solutions in the energy sector.",
+    "thesis": "",
+    "accuracy": 1,
+    "confidence": 50,
     "tags": [
       "Gasable | غازابل",
-      "Head of Research And Development",
-      "R&D",
-      "Energy",
-      "Gas",
-      "Research and Development",
-      "Gas Solutions",
-      "Innovation"
+      "Head of Research And Development"
     ],
-    "sources": [
-      "https://www.linkedin.com/in/haroon-shafqat"
-    ],
-    "lastEnrichedAt": "2025-11-24T14:32:34.465Z",
+    "sources": [],
+    "lastEnrichedAt": "2025-11-24T15:03:01.896Z",
     "source": {
       "firstName": "Haroon",
       "lastName": "Shafqat",
@@ -178,7 +166,19 @@
     },
     "attachedFiles": [],
     "matchStatus": "not_synced",
-    "companyId": 54
+    "companyId": 54,
+    "companyDetails": {
+      "name": "Gasable",
+      "website": null,
+      "description": "Gasable focuses on providing advanced technological solutions in the energy sector, emphasizing sustainability and efficiency.",
+      "stage": "Growth",
+      "raising": null,
+      "headquarters": null,
+      "fundingTarget": null,
+      "fundingRaised": null,
+      "foundedYear": null
+    },
+    "investorDetails": {}
   },
   {
     "id": "ga-lle-bou-abdo",
