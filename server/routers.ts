@@ -4,7 +4,7 @@ import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { z } from "zod";
 import { getDb, listAllCompanies, listAllInvestors } from "./db";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, sql } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { companies, investors, introRequests, matches, connections } from "../drizzle/schema";
 import { sdk } from "./_core/sdk";
@@ -834,6 +834,120 @@ export const appRouter = router({
         const { getStageDistribution } = await import("./db");
         return getStageDistribution();
       }),
+
+    recentActivity: publicProcedure.query(async () => {
+      const db = await getDb();
+      if (!db) return { matches: [], companies: [], investors: [] };
+
+      const recentMatches = await db
+        .select({
+          id: matches.id,
+          score: matches.score,
+          createdAt: matches.createdAt,
+          companyId: matches.companyId,
+          investorId: matches.investorId,
+        })
+        .from(matches)
+        .orderBy(desc(matches.createdAt))
+        .limit(10);
+
+      const recentCompanies = await db
+        .select({
+          id: companies.id,
+          name: companies.name,
+          sector: companies.sector,
+          stage: companies.stage,
+          createdAt: companies.createdAt,
+        })
+        .from(companies)
+        .orderBy(desc(companies.createdAt))
+        .limit(10);
+
+      const recentInvestors = await db
+        .select({
+          id: investors.id,
+          name: investors.name,
+          firm: investors.firm,
+          sector: investors.sector,
+          createdAt: investors.createdAt,
+        })
+        .from(investors)
+        .orderBy(desc(investors.createdAt))
+        .limit(10);
+
+      return {
+        matches: recentMatches,
+        companies: recentCompanies,
+        investors: recentInvestors,
+      };
+    }),
+
+    topEntities: publicProcedure.query(async () => {
+      const db = await getDb();
+      if (!db) return { investors: [], companies: [] };
+
+      const topInvestors = await db
+        .select({
+          investorId: matches.investorId,
+          count: desc(sql<number>`count(*)`),
+        })
+        .from(matches)
+        .groupBy(matches.investorId)
+        .orderBy(desc(sql`count(*)`))
+        .limit(5);
+
+      const topCompanies = await db
+        .select({
+          companyId: matches.companyId,
+          count: desc(sql<number>`count(*)`),
+        })
+        .from(matches)
+        .groupBy(matches.companyId)
+        .orderBy(desc(sql`count(*)`))
+        .limit(5);
+
+      const investorDetails = await Promise.all(
+        topInvestors.map(async item => {
+          const investor = await db
+            .select({
+              id: investors.id,
+              name: investors.name,
+              firm: investors.firm,
+              title: investors.title,
+              sector: investors.sector,
+            })
+            .from(investors)
+            .where(eq(investors.id, item.investorId))
+            .limit(1);
+          return investor[0]
+            ? { ...investor[0], connections: Number(item.count) }
+            : null;
+        }),
+      );
+
+      const companyDetails = await Promise.all(
+        topCompanies.map(async item => {
+          const company = await db
+            .select({
+              id: companies.id,
+              name: companies.name,
+              sector: companies.sector,
+              stage: companies.stage,
+            })
+            .from(companies)
+            .where(eq(companies.id, item.companyId))
+            .limit(1);
+          return company[0]
+            ? { ...company[0], connections: Number(item.count) }
+            : null;
+        }),
+      );
+
+      return {
+        investors: investorDetails.filter(Boolean),
+        companies: companyDetails.filter(Boolean),
+      };
+    }),
   }),
 
   // Legacy entity endpoints for backward compatibility

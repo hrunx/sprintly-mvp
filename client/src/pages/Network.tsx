@@ -8,6 +8,8 @@ export default function Network() {
   const { data: sectorDistribution, isLoading: sectorsLoading } =
     trpc.analytics.sectorDistribution.useQuery();
   const { data: analytics, isLoading: analyticsLoading } = trpc.analytics.overview.useQuery();
+  const { data: recentActivity } = trpc.analytics.recentActivity.useQuery();
+  const { data: topEntities } = trpc.analytics.topEntities.useQuery();
 
   const isLoading = sectorsLoading || analyticsLoading;
 
@@ -188,9 +190,42 @@ export default function Network() {
             <CardDescription>Most influential nodes in your network</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-sm text-muted-foreground">
-              This view will populate after real network data is ingested from your CSV and matches are generated.
-            </div>
+            {topEntities && (topEntities.investors.length > 0 || topEntities.companies.length > 0) ? (
+              <div className="space-y-3">
+                {topEntities.investors.map(entity => (
+                  <div
+                    key={`inv-${entity?.id}`}
+                    className="flex items-center justify-between p-3 rounded-lg border hover:border-primary transition-colors"
+                  >
+                    <div>
+                      <div className="font-medium">{entity?.name}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {entity?.title || "Investor"} • {entity?.firm || "Firm unknown"}
+                      </div>
+                    </div>
+                    <Badge variant="secondary">{entity?.connections} matches</Badge>
+                  </div>
+                ))}
+                {topEntities.companies.map(entity => (
+                  <div
+                    key={`co-${entity?.id}`}
+                    className="flex items-center justify-between p-3 rounded-lg border hover:border-primary transition-colors"
+                  >
+                    <div>
+                      <div className="font-medium">{entity?.name}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {entity?.sector || "Sector"} • {entity?.stage || "Stage"}
+                      </div>
+                    </div>
+                    <Badge variant="secondary">{entity?.connections} matches</Badge>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-sm text-muted-foreground">
+                This view will populate after real network data is ingested from your CSV and matches are generated.
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -200,9 +235,38 @@ export default function Network() {
             <CardDescription>Latest network updates and connections</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-sm text-muted-foreground">
-              Activity feed will appear after real connections and matches are created.
-            </div>
+            {recentActivity && (recentActivity.matches.length > 0 || recentActivity.companies.length > 0) ? (
+              <div className="space-y-4">
+                {recentActivity.matches.map(item => (
+                  <div key={`match-${item.id}`} className="flex items-start gap-3 pb-3 border-b last:border-0">
+                    <div className="w-2 h-2 rounded-full bg-primary mt-2" />
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium">
+                        Match created • Score {item.score}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        Company #{item.companyId} ↔ Investor #{item.investorId}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                {recentActivity.companies.map(item => (
+                  <div key={`company-${item.id}`} className="flex items-start gap-3 pb-3 border-b last:border-0">
+                    <div className="w-2 h-2 rounded-full bg-primary mt-2" />
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium">Company imported</div>
+                      <div className="text-xs text-muted-foreground">
+                        {item.name} • {item.sector || "Sector"} • {item.stage || "Stage"}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-sm text-muted-foreground">
+                Activity feed will appear after real connections and matches are created.
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

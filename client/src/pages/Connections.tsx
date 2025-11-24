@@ -146,7 +146,7 @@ export default function Connections() {
             className="gap-2"
           >
             {syncMutation.isPending ? <Clock className="h-4 w-4 animate-spin" /> : <Rocket className="h-4 w-4" />}
-            Sync first 20 from CSV
+            Sync first 20 from CSV (auto-matching)
           </Button>
           <Button variant="outline" onClick={() => refetch()} className="gap-2" disabled={isLoading}>
             <RefreshCcw className="h-4 w-4" />
@@ -312,16 +312,7 @@ export default function Connections() {
                     <RefreshCcw className="h-4 w-4" />
                     Re-enrich
                   </Button>
-                  <Button
-                    size="sm"
-                    className="gap-1"
-                    onClick={() => pushMutation.mutate({ id: profile.id })}
-                    disabled={pushMutation.isPending}
-                  >
-                    <CheckCircle2 className="h-4 w-4" />
-                    Push to matching
-                  </Button>
-                </div>
+            </div>
 
                 {profile.attachedFiles?.length ? (
                   <div className="space-y-2">
