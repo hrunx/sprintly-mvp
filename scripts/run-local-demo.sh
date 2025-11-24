@@ -28,8 +28,17 @@ elif [[ ! -x node_modules/.bin/cross-env ]]; then
   pnpm install --frozen-lockfile
 fi
 
-echo "🐬 Starting services (docker compose up -d mysql firecrawl)..."
-docker compose up -d mysql firecrawl
+echo "🐬 Starting MySQL (docker compose up -d mysql)..."
+docker compose up -d mysql
+
+if [[ "${FIRECRAWL_ENABLED:-0}" == "1" ]]; then
+  echo "🕸️  Starting Firecrawl (docker compose up -d firecrawl)..."
+  if ! docker compose up -d firecrawl; then
+    echo "⚠️  Firecrawl failed to start (likely registry auth). To enable it, run 'docker login ghcr.io' with valid credentials, then rerun with FIRECRAWL_ENABLED=1."
+  fi
+else
+  echo "ℹ️  Firecrawl disabled. Set FIRECRAWL_ENABLED=1 to start it."
+fi
 
 echo "⏳ Waiting for MySQL to become healthy..."
 for i in {1..30}; do
