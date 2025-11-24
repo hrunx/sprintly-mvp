@@ -188,30 +188,8 @@ export default function Network() {
             <CardDescription>Most influential nodes in your network</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              {[
-                { name: "Sarah Al-Mansoori", role: "Founder", connections: 28, type: "founder" },
-                { name: "David Chen", role: "Partner", connections: 24, type: "investor" },
-                { name: "Ahmed Hassan", role: "Founder", connections: 22, type: "founder" },
-                { name: "Emma Rodriguez", role: "GP", connections: 21, type: "investor" },
-                { name: "Layla Ibrahim", role: "Founder", connections: 19, type: "founder" },
-              ].map((entity, idx) => (
-                <div
-                  key={idx}
-                  className="flex items-center justify-between p-3 rounded-lg border hover:border-primary transition-colors"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold">
-                      {entity.name.charAt(0)}
-                    </div>
-                    <div>
-                      <div className="font-medium">{entity.name}</div>
-                      <div className="text-sm text-muted-foreground">{entity.role}</div>
-                    </div>
-                  </div>
-                  <Badge variant="secondary">{entity.connections} connections</Badge>
-                </div>
-              ))}
+            <div className="text-sm text-muted-foreground">
+              This view will populate after real network data is ingested from your CSV and matches are generated.
             </div>
           </CardContent>
         </Card>
@@ -222,51 +200,8 @@ export default function Network() {
             <CardDescription>Latest network updates and connections</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {[
-                {
-                  action: "New connection",
-                  from: "Omar Khalil",
-                  to: "James Park",
-                  time: "2 hours ago",
-                },
-                {
-                  action: "Match created",
-                  from: "Fatima Al-Sayed",
-                  to: "Sophia Williams",
-                  time: "5 hours ago",
-                },
-                {
-                  action: "New connection",
-                  from: "Khaled Rahman",
-                  to: "Michael Anderson",
-                  time: "1 day ago",
-                },
-                {
-                  action: "Match created",
-                  from: "Noor Abdullah",
-                  to: "Priya Sharma",
-                  time: "1 day ago",
-                },
-                {
-                  action: "New connection",
-                  from: "Youssef Malik",
-                  to: "Robert Taylor",
-                  time: "2 days ago",
-                },
-              ].map((activity, idx) => (
-                <div key={idx} className="flex items-start gap-3 pb-3 border-b last:border-0">
-                  <div className="w-2 h-2 rounded-full bg-primary mt-2" />
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm">
-                      <span className="font-medium">{activity.action}</span> between{" "}
-                      <span className="font-medium">{activity.from}</span> and{" "}
-                      <span className="font-medium">{activity.to}</span>
-                    </div>
-                    <div className="text-xs text-muted-foreground mt-1">{activity.time}</div>
-                  </div>
-                </div>
-              ))}
+            <div className="text-sm text-muted-foreground">
+              Activity feed will appear after real connections and matches are created.
             </div>
           </CardContent>
         </Card>

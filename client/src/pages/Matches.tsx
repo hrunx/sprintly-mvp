@@ -15,7 +15,7 @@ import {
   ArrowRight,
   Send,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Select,
   SelectContent,
@@ -25,20 +25,26 @@ import {
 } from "@/components/ui/select";
 
 export default function Matches() {
-  const [selectedCompany, setSelectedCompany] = useState<number>(1);
+  const [selectedCompany, setSelectedCompany] = useState<number | null>(null);
 
   const { data: companies } = trpc.companies.list.useQuery({
     limit: 50,
   });
 
-  const { data: matches, isLoading } = trpc.matches.list.useQuery({
-    companyId: selectedCompany,
-    limit: 20,
-  });
+  const { data: matches, isLoading } = trpc.matches.list.useQuery(
+    selectedCompany
+      ? {
+          companyId: selectedCompany,
+          limit: 20,
+        }
+      : undefined,
+    { enabled: Boolean(selectedCompany) },
+  );
 
-  const { data: investors } = trpc.investors.list.useQuery({
-    limit: 200,
-  });
+  const { data: investors } = trpc.investors.list.useQuery(
+    { limit: 200 },
+    { enabled: Boolean(selectedCompany) },
+  );
 
   const requestIntroMutation = trpc.introRequests.create.useMutation();
 
@@ -53,7 +59,13 @@ export default function Matches() {
   };
 
   // Create a map of investor data for quick lookup
-  const investorMap = new Map(investors?.map((inv) => [inv.id, inv]));
+  const investorMap = useMemo(() => new Map(investors?.map((inv) => [inv.id, inv])), [investors]);
+
+  useEffect(() => {
+    if (!selectedCompany && companies && companies.length > 0) {
+      setSelectedCompany(companies[0].id);
+    }
+  }, [companies, selectedCompany]);
 
   const getScoreColor = (score: number) => {
     if (score >= 80) return "text-green-600 bg-green-50 dark:bg-green-950";
@@ -92,32 +104,44 @@ export default function Matches() {
           <CardDescription>Choose a company to see investor matches</CardDescription>
         </CardHeader>
         <CardContent>
-          <Select
-            value={selectedCompany.toString()}
-            onValueChange={(value) => setSelectedCompany(parseInt(value))}
-          >
-            <SelectTrigger className="w-full md:w-96">
-              <SelectValue placeholder="Select company" />
-            </SelectTrigger>
-            <SelectContent>
-              {companies?.map((company) => (
-                <SelectItem key={company.id} value={company.id.toString()}>
-                  <div className="flex items-center gap-2">
-                    <Building2 className="h-4 w-4" />
-                    <span>{company.name}</span>
-                    <span className="text-muted-foreground text-xs">
-                      • {company.sector} • {company.stage}
-                    </span>
-                  </div>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          {companies && companies.length > 0 ? (
+            <Select
+              value={selectedCompany?.toString() ?? ""}
+              onValueChange={(value) => setSelectedCompany(parseInt(value))}
+            >
+              <SelectTrigger className="w-full md:w-96">
+                <SelectValue placeholder="Select company" />
+              </SelectTrigger>
+              <SelectContent>
+                {companies.map((company) => (
+                  <SelectItem key={company.id} value={company.id.toString()}>
+                    <div className="flex items-center gap-2">
+                      <Building2 className="h-4 w-4" />
+                      <span>{company.name}</span>
+                      <span className="text-muted-foreground text-xs">
+                        • {company.sector || "N/A"} • {company.stage || "N/A"}
+                      </span>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              No companies found. Import your LinkedIn CSV to get started.
+            </p>
+          )}
         </CardContent>
       </Card>
 
       {/* Matches List */}
-      {isLoading ? (
+      {!selectedCompany ? (
+        <Card>
+          <CardContent className="p-6 text-muted-foreground">
+            Select or import a company to see matches.
+          </CardContent>
+        </Card>
+      ) : isLoading ? (
         <div className="space-y-4">
           {[1, 2, 3].map((i) => (
             <Card key={i}>
@@ -164,7 +188,7 @@ export default function Matches() {
                           <p className="text-muted-foreground text-sm mb-2">
                             {investor.title} at {investor.firm}
                           </p>
-                          <p className="text-sm line-clamp-2">{investor.bio}</p>
+                          <p className="text-sm line-clamp-2">{investor.bio || "No bio yet"}</p>
                         </div>
                       </div>
 
@@ -196,8 +220,13 @@ export default function Matches() {
                           <div>
                             <div className="text-xs text-muted-foreground">Check Size</div>
                             <div className="text-sm font-medium">
-                              ${(investor.checkSizeMin! / 1000000).toFixed(1)}M - $
-                              {(investor.checkSizeMax! / 1000000).toFixed(1)}M
+                              {investor.checkSizeMin && investor.checkSizeMax
+                                ? `$${(investor.checkSizeMin / 1_000_000).toFixed(1)}M - $${(investor.checkSizeMax / 1_000_000).toFixed(1)}M`
+                                : investor.checkSizeMin
+                                ? `From $${(investor.checkSizeMin / 1_000_000).toFixed(1)}M`
+                                : investor.checkSizeMax
+                                ? `Up to $${(investor.checkSizeMax / 1_000_000).toFixed(1)}M`
+                                : "Not specified"}
                             </div>
                           </div>
                         </div>
