@@ -22,6 +22,13 @@
       "when": 1763053886962,
       "tag": "0002_slim_jack_power",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1764001892094,
+      "tag": "0003_bent_firelord",
+      "breakpoints": true
     }
   ]
 }

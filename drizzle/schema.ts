@@ -182,6 +182,46 @@ export type Connection = typeof connections.$inferSelect;
 export type InsertConnection = typeof connections.$inferInsert;
 
 /**
+ * Raw LinkedIn/CSV connections with enriched payloads and scraped facts
+ */
+export const connectionProfiles = mysqlTable("connectionProfiles", {
+  id: int("id").autoincrement().primaryKey(),
+  profileId: varchar("profileId", { length: 64 }).notNull().unique(),
+  fullName: varchar("fullName", { length: 255 }),
+  role: mysqlEnum("role", ["investor", "founder", "operator"]).notNull().default("operator"),
+  email: varchar("email", { length: 320 }),
+  linkedinUrl: varchar("linkedinUrl", { length: 500 }),
+  accuracy: int("accuracy").default(0),
+  confidence: int("confidence").default(0),
+  rawSource: text("rawSource"), // JSON string of the CSV row
+  enrichedProfile: text("enrichedProfile"), // JSON string of the enriched profile
+  scrapedSummary: text("scrapedSummary"),
+  scrapedFacts: text("scrapedFacts"),
+  investorId: int("investorId"),
+  primaryCompanyId: int("primaryCompanyId"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type ConnectionProfileRow = typeof connectionProfiles.$inferSelect;
+export type InsertConnectionProfileRow = typeof connectionProfiles.$inferInsert;
+
+/**
+ * Link table to track which companies are tied to each connection profile
+ */
+export const connectionCompanyLinks = mysqlTable("connectionCompanyLinks", {
+  id: int("id").autoincrement().primaryKey(),
+  profileId: varchar("profileId", { length: 64 }).notNull(),
+  companyId: int("companyId").notNull(),
+  relationship: varchar("relationship", { length: 50 }).default("founder"),
+  confidence: int("confidence").default(70),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type ConnectionCompanyLink = typeof connectionCompanyLinks.$inferSelect;
+export type InsertConnectionCompanyLink = typeof connectionCompanyLinks.$inferInsert;
+
+/**
  * Match history and outcomes between companies and investors
  */
 export const matches = mysqlTable("matches", {

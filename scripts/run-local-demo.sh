@@ -56,13 +56,6 @@ done
 echo "🗄️  Running migrations..."
 NODE_ENV=development DATABASE_URL="$DATABASE_URL" pnpm exec drizzle-kit migrate
 
-if [[ -f server/data/connection-profiles.json && -z "${FORCE_ENRICH:-}" ]]; then
-  echo "🤖 Skipping enrichment (server/data/connection-profiles.json exists). Set FORCE_ENRICH=1 to re-run."
-else
-  echo "🤖 Processing first 20 LinkedIn connections with LLM enrichment..."
-  NODE_ENV=development DATABASE_URL="$DATABASE_URL" pnpm exec tsx scripts/process-connections.ts
-fi
-
 echo "🚀 Starting dev server (frontend + API via Vite)..."
 echo "   Press Ctrl+C to stop. Open http://localhost:3000"
 NODE_ENV=development DATABASE_URL="$DATABASE_URL" exec pnpm dev

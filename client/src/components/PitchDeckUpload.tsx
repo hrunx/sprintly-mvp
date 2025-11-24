@@ -17,6 +17,9 @@ interface ExtractedMetrics {
   fundingTarget?: string;
   businessModel?: string;
   competitors?: string[];
+  summary?: string;
+  highlights?: string[];
+  risks?: string[];
 }
 
 interface PitchDeckUploadProps {
@@ -51,40 +54,6 @@ export function PitchDeckUpload({ companyId, companyName, onSuccess }: PitchDeck
     setError(null);
   };
 
-  const simulateAnalysis = async () => {
-    // Simulate AI analysis steps
-    const steps = [
-      { progress: 20, message: "Uploading pitch deck..." },
-      { progress: 40, message: "Extracting text from PDF..." },
-      { progress: 60, message: "AI analyzing business metrics..." },
-      { progress: 80, message: "Identifying key data points..." },
-      { progress: 100, message: "Analysis complete!" },
-    ];
-
-    for (const step of steps) {
-      await new Promise((resolve) => setTimeout(resolve, 800));
-      setProgress(step.progress);
-      toast.info(step.message);
-    }
-
-    // Simulated extracted metrics
-    const mockMetrics: ExtractedMetrics = {
-      revenue: "$2.5M ARR",
-      teamSize: 15,
-      marketSize: "$50B TAM",
-      customers: 150,
-      growth: "300% YoY",
-      fundingTarget: "$5M",
-      businessModel: "B2B SaaS",
-      competitors: ["Competitor A", "Competitor B", "Competitor C"],
-    };
-
-    setExtractedMetrics(mockMetrics);
-    if (onSuccess) {
-      onSuccess(mockMetrics);
-    }
-  };
-
   const handleUpload = async () => {
     if (!file) return;
 
@@ -101,10 +70,10 @@ export function PitchDeckUpload({ companyId, companyName, onSuccess }: PitchDeck
         reader.readAsDataURL(file);
       });
 
-      setProgress(35);
-      toast.info("Uploading pitch deck...");
+      setProgress(30);
+      toast.info("Uploading pitch deck and running analysis...");
 
-      await uploadMutation.mutateAsync({
+      const response = await uploadMutation.mutateAsync({
         companyName,
         companyId,
         fileName: file.name,
@@ -112,11 +81,28 @@ export function PitchDeckUpload({ companyId, companyName, onSuccess }: PitchDeck
         dataBase64: base64,
       });
 
-      setProgress(70);
-      await simulateAnalysis();
+      const analysis = (response as any)?.analysis || {};
+      const metrics: ExtractedMetrics = {
+        revenue: analysis?.metrics?.revenue,
+        teamSize: analysis?.metrics?.teamSize,
+        marketSize: analysis?.metrics?.marketSize,
+        customers: analysis?.metrics?.customers,
+        growth: analysis?.metrics?.growth,
+        fundingTarget: analysis?.metrics?.fundingTarget,
+        businessModel: analysis?.metrics?.businessModel,
+        competitors: analysis?.metrics?.competitors || analysis?.metrics?.competition || [],
+        summary: analysis?.summary,
+        highlights: analysis?.highlights,
+        risks: analysis?.risks,
+      };
+
+      setExtractedMetrics(metrics);
+      if (onSuccess) {
+        onSuccess(metrics);
+      }
 
       setProgress(100);
-      toast.success("Pitch deck uploaded and analysis stored!");
+      toast.success("Pitch deck uploaded and analyzed!");
     } catch (err: any) {
       setError(err.message || "Failed to analyze pitch deck");
       toast.error("Analysis failed");
@@ -185,7 +171,6 @@ export function PitchDeckUpload({ companyId, companyName, onSuccess }: PitchDeck
               </div>
             )}
 
-            {/* Progress */}
             {uploading && (
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
@@ -210,12 +195,10 @@ export function PitchDeckUpload({ companyId, companyName, onSuccess }: PitchDeck
           </>
         ) : (
           <>
-            {/* Success State */}
             <Alert className="bg-green-50 border-green-200">
               <CheckCircle2 className="h-4 w-4 text-green-600" />
               <AlertDescription className="text-green-800">
-                Successfully extracted {Object.keys(extractedMetrics).length} key metrics from your
-                pitch deck!
+                Successfully extracted key metrics and summary from your pitch deck!
               </AlertDescription>
             </Alert>
 
@@ -287,6 +270,35 @@ export function PitchDeckUpload({ companyId, companyName, onSuccess }: PitchDeck
                       </Badge>
                     ))}
                   </div>
+                </div>
+              )}
+
+              {extractedMetrics.summary && (
+                <div className="p-3 rounded-lg border bg-card">
+                  <div className="text-xs text-muted-foreground mb-1">LLM Summary</div>
+                  <p className="text-sm text-muted-foreground">{extractedMetrics.summary}</p>
+                </div>
+              )}
+
+              {extractedMetrics.highlights && extractedMetrics.highlights.length > 0 && (
+                <div className="p-3 rounded-lg border bg-card">
+                  <div className="text-xs text-muted-foreground mb-2">Highlights</div>
+                  <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                    {extractedMetrics.highlights.map((item, idx) => (
+                      <li key={idx}>{item}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {extractedMetrics.risks && extractedMetrics.risks.length > 0 && (
+                <div className="p-3 rounded-lg border bg-card">
+                  <div className="text-xs text-muted-foreground mb-2">Risks / Open Questions</div>
+                  <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                    {extractedMetrics.risks.map((item, idx) => (
+                      <li key={idx}>{item}</li>
+                    ))}
+                  </ul>
                 </div>
               )}
             </div>

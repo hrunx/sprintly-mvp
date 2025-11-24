@@ -14,6 +14,7 @@ import Settings from "./pages/Settings";
 import DataImport from "./pages/DataImport";
 import Connections from "./pages/Connections";
 import CompanyProfile from "./pages/CompanyProfile";
+import ConnectionDetail from "./pages/ConnectionDetail";
 
 function Router() {
   return (
@@ -24,6 +25,7 @@ function Router() {
       <Route path="/network" component={() => <DashboardLayout><Network /></DashboardLayout>} />
       <Route path="/investor/:id" component={() => <DashboardLayout><InvestorProfile /></DashboardLayout>} />
       <Route path="/company/:id" component={() => <DashboardLayout><CompanyProfile /></DashboardLayout>} />
+      <Route path="/connection/:id" component={() => <DashboardLayout><ConnectionDetail /></DashboardLayout>} />
       <Route path="/settings" component={() => <DashboardLayout><Settings /></DashboardLayout>} />
       <Route path="/import" component={() => <DashboardLayout><DataImport /></DashboardLayout>} />
       <Route path="/connections" component={() => <DashboardLayout><Connections /></DashboardLayout>} />

@@ -65,4 +65,21 @@ export type EnrichedConnectionProfile = {
     pastInvestments?: string[];
     bio?: string;
   };
+  linkedCompanies?: Array<{
+    name: string;
+    companyId?: number;
+    website?: string;
+    description?: string;
+    stage?: string;
+    headquarters?: string;
+    foundedYear?: number | null;
+    fundingTarget?: number | null;
+    fundingRaised?: number | null;
+    role?: string;
+    confidence?: number;
+    isPrimary?: boolean;
+  }>;
+  scrapedSummary?: string;
+  scrapedFacts?: string[];
+  scrapeSources?: string[];
 };

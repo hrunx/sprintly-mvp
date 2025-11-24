@@ -6,9 +6,9 @@
     <meta
       name="viewport"
       content="width=device-width, initial-scale=1.0, maximum-scale=1" />
-    <link rel="icon" type="image/png" href="%VITE_APP_LOGO%" />
-    <link rel="apple-touch-icon" href="%VITE_APP_LOGO%" />
-    <title>%VITE_APP_TITLE%</title>
+    <link rel="icon" type="image/png" href="/logo.svg" />
+    <link rel="apple-touch-icon" href="/logo.svg" />
+    <title>Sprintly AI</title>
     <!-- Add Google Fonts here, example:
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -19,10 +19,27 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
-    <script
-      defer
-      src="%VITE_ANALYTICS_ENDPOINT%/umami"
-      data-website-id="%VITE_ANALYTICS_WEBSITE_ID%"></script>
+    <script type="module">
+      const env = import.meta.env || {};
+      // Title/icon fallbacks so dev doesn't error if env is missing
+      const appTitle = env.VITE_APP_TITLE || "Sprintly AI";
+      const appLogo = env.VITE_APP_LOGO || "/logo.svg";
+      document.title = appTitle;
+      document.querySelectorAll('link[rel="icon"], link[rel="apple-touch-icon"]').forEach(link => {
+        link.setAttribute("href", appLogo);
+      });
+
+      // Load analytics only when configured to avoid malformed URLs
+      const analyticsEndpoint = (env.VITE_ANALYTICS_ENDPOINT || "").trim();
+      const analyticsId = (env.VITE_ANALYTICS_WEBSITE_ID || "").trim();
+      if (analyticsEndpoint && analyticsId) {
+        const script = document.createElement("script");
+        script.defer = true;
+        script.dataset.websiteId = analyticsId;
+        script.src = `${analyticsEndpoint.replace(/\/+$/, "")}/umami`;
+        document.body.appendChild(script);
+      }
+    </script>
   </body>
 
 </html>

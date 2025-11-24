@@ -1,4 +1,5 @@
 import { trpc } from "@/lib/trpc";
+import { useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -26,8 +27,47 @@ export default function CompanyProfile() {
   const [, params] = useRoute("/company/:id");
   const companyId = params?.id ? parseInt(params.id) : 0;
 
-  const { data: company, isLoading } = trpc.companies.byId.useQuery({ id: companyId });
-  const { data: matches } = trpc.matches.list.useQuery({ companyId, limit: 5 });
+  const queryEnabled = companyId > 0;
+  const { data: company, isLoading } = trpc.companies.byId.useQuery({ id: companyId }, { enabled: queryEnabled });
+  const { data: matches } = trpc.matches.list.useQuery({ companyId, limit: 5 }, { enabled: queryEnabled });
+  const { data: investors } = trpc.investors.list.useQuery({ limit: 200 }, { enabled: queryEnabled });
+
+  const tags = useMemo(() => {
+    if (!company?.tags) return [];
+    try {
+      const parsed = typeof company.tags === "string" ? JSON.parse(company.tags) : company.tags;
+      if (Array.isArray(parsed)) {
+        return parsed;
+      }
+      if (parsed && typeof parsed === "object") {
+        return Object.values(parsed)
+          .flatMap((value) => {
+            if (Array.isArray(value)) return value;
+            if (typeof value === "string") return value.split(",").map((item) => item.trim());
+            return [];
+          })
+          .filter(Boolean);
+      }
+      if (typeof parsed === "string") {
+        return parsed.split(",").map((item) => item.trim());
+      }
+    } catch (error) {
+      console.warn("[CompanyProfile] Failed to parse tags", error);
+    }
+    return [];
+  }, [company?.tags]);
+
+  const deckAnalysis = useMemo(() => {
+    if (!company?.pitchDeckAnalysis) return null as any;
+    try {
+      return typeof company.pitchDeckAnalysis === "string"
+        ? JSON.parse(company.pitchDeckAnalysis)
+        : company.pitchDeckAnalysis;
+    } catch (error) {
+      console.warn("[CompanyProfile] Failed to parse pitch deck analysis", error);
+      return null;
+    }
+  }, [company?.pitchDeckAnalysis]);
 
   if (isLoading) {
     return (
@@ -59,33 +99,6 @@ export default function CompanyProfile() {
     if (amount >= 1000) return `$${(amount / 1000).toFixed(0)}K`;
     return `$${amount}`;
   };
-
-  const computeTags = () => {
-    if (!company.tags) return [];
-    try {
-      const parsed = typeof company.tags === "string" ? JSON.parse(company.tags) : company.tags;
-      if (Array.isArray(parsed)) {
-        return parsed;
-      }
-      if (parsed && typeof parsed === "object") {
-        return Object.values(parsed)
-          .flatMap((value) => {
-            if (Array.isArray(value)) return value;
-            if (typeof value === "string") return value.split(",").map((item) => item.trim());
-            return [];
-          })
-          .filter(Boolean);
-      }
-      if (typeof parsed === "string") {
-        return parsed.split(",").map((item) => item.trim());
-      }
-    } catch (error) {
-      console.warn("[CompanyProfile] Failed to parse tags", error);
-    }
-    return [];
-  };
-
-  const tags = computeTags();
 
   return (
     <div className="space-y-6">
@@ -251,6 +264,104 @@ export default function CompanyProfile() {
       {/* Pitch Deck Upload */}
       <PitchDeckUpload companyId={companyId} companyName={company.name} />
 
+      {deckAnalysis && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5 text-purple-600" />
+              Pitch Deck Insights
+            </CardTitle>
+            <CardDescription>LLM-generated summary from the uploaded deck</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {deckAnalysis.summary && (
+              <div className="p-4 rounded-lg border bg-muted/40 text-sm text-muted-foreground">
+                {deckAnalysis.summary}
+              </div>
+            )}
+            {deckAnalysis.highlights && deckAnalysis.highlights.length > 0 && (
+              <div>
+                <div className="text-xs text-muted-foreground mb-1">Highlights</div>
+                <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                  {deckAnalysis.highlights.map((item: string, idx: number) => (
+                    <li key={idx}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {deckAnalysis.risks && deckAnalysis.risks.length > 0 && (
+              <div>
+                <div className="text-xs text-muted-foreground mb-1">Risks / Questions</div>
+                <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                  {deckAnalysis.risks.map((item: string, idx: number) => (
+                    <li key={idx}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {deckAnalysis.metrics && (
+              <div className="grid grid-cols-2 gap-3">
+                {deckAnalysis.metrics.revenue && (
+                  <div className="p-3 rounded-lg border bg-card">
+                    <div className="text-xs text-muted-foreground mb-1">Revenue</div>
+                    <div className="font-semibold">{deckAnalysis.metrics.revenue}</div>
+                  </div>
+                )}
+                {deckAnalysis.metrics.teamSize && (
+                  <div className="p-3 rounded-lg border bg-card">
+                    <div className="text-xs text-muted-foreground mb-1">Team Size</div>
+                    <div className="font-semibold">{deckAnalysis.metrics.teamSize}</div>
+                  </div>
+                )}
+                {deckAnalysis.metrics.marketSize && (
+                  <div className="p-3 rounded-lg border bg-card">
+                    <div className="text-xs text-muted-foreground mb-1">Market Size</div>
+                    <div className="font-semibold">{deckAnalysis.metrics.marketSize}</div>
+                  </div>
+                )}
+                {deckAnalysis.metrics.customers && (
+                  <div className="p-3 rounded-lg border bg-card">
+                    <div className="text-xs text-muted-foreground mb-1">Customers</div>
+                    <div className="font-semibold">{deckAnalysis.metrics.customers}</div>
+                  </div>
+                )}
+                {deckAnalysis.metrics.growth && (
+                  <div className="p-3 rounded-lg border bg-card">
+                    <div className="text-xs text-muted-foreground mb-1">Growth</div>
+                    <div className="font-semibold text-green-600">{deckAnalysis.metrics.growth}</div>
+                  </div>
+                )}
+                {deckAnalysis.metrics.fundingTarget && (
+                  <div className="p-3 rounded-lg border bg-card">
+                    <div className="text-xs text-muted-foreground mb-1">Funding Target</div>
+                    <div className="font-semibold">{deckAnalysis.metrics.fundingTarget}</div>
+                  </div>
+                )}
+                {deckAnalysis.metrics.businessModel && (
+                  <div className="p-3 rounded-lg border bg-card">
+                    <div className="text-xs text-muted-foreground mb-1">Business Model</div>
+                    <Badge>{deckAnalysis.metrics.businessModel}</Badge>
+                  </div>
+                )}
+                {deckAnalysis.metrics.competitors && deckAnalysis.metrics.competitors.length > 0 && (
+                  <div className="p-3 rounded-lg border bg-card">
+                    <div className="text-xs text-muted-foreground mb-1">Competitors</div>
+                    <div className="flex flex-wrap gap-2">
+                      {deckAnalysis.metrics.competitors.map((comp: string, idx: number) => (
+                        <Badge key={idx} variant="outline">
+                          {comp}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
       {/* Founder Information */}
       {company.founderName && (
         <Card>
@@ -301,26 +412,36 @@ export default function CompanyProfile() {
           <CardContent>
             <div className="space-y-3">
               {matches.slice(0, 5).map((match) => (
-                <div
-                  key={match.id}
-                  className="flex items-center justify-between p-3 rounded-lg border hover:bg-accent cursor-pointer"
-                  onClick={() => (window.location.href = `/investor/${match.investorId}`)}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center text-white font-bold">
-                      {match.score}
-                    </div>
-                    <div>
-                      <div className="font-medium">Investor #{match.investorId}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {match.explanation?.substring(0, 60)}...
+                (() => {
+                  const investor = investors?.find(inv => inv.id === match.investorId);
+                  return (
+                    <div
+                      key={match.id}
+                      className="flex items-center justify-between p-3 rounded-lg border hover:bg-accent cursor-pointer"
+                      onClick={() => (window.location.href = `/investor/${match.investorId}`)}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center text-white font-bold">
+                          {match.score}
+                        </div>
+                        <div>
+                          <div className="font-medium">
+                            {investor ? investor.name : `Investor #${match.investorId}`}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            {investor?.firm || investor?.stage || "Match ready"}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            {match.explanation?.substring(0, 80) || ""}
+                          </div>
+                        </div>
                       </div>
+                      <Button variant="ghost" size="sm">
+                        View Profile
+                      </Button>
                     </div>
-                  </div>
-                  <Button variant="ghost" size="sm">
-                    View Profile
-                  </Button>
-                </div>
+                  );
+                })()
               ))}
             </div>
           </CardContent>

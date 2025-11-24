@@ -89,7 +89,17 @@ async function syncProfilesToDatabase(profiles: EnrichedConnectionProfile[]) {
       const keys = getInvestorDedupKeys(normalized);
       const existingId = keys.map(key => investorKeyToId.get(key)).find(Boolean);
       if (existingId) {
-        updated.push({ ...profile, investorId: existingId, matchStatus: profile.matchStatus || "synced" });
+        let matchStatus: EnrichedConnectionProfile["matchStatus"] = "synced";
+        try {
+          const { generated } = await generateMatchesForInvestor(existingId, {
+            companies: companiesCache,
+          });
+          matchesGenerated += generated;
+          if (generated > 0) matchStatus = "matched";
+        } catch (error) {
+          console.warn("[Matching] Failed for existing investor", existingId, error);
+        }
+        updated.push({ ...profile, investorId: existingId, matchStatus });
         continue;
       }
 
@@ -132,7 +142,17 @@ async function syncProfilesToDatabase(profiles: EnrichedConnectionProfile[]) {
       const keys = getCompanyDedupKeys(normalizedCompany);
       const existingId = keys.map(key => companyKeyToId.get(key)).find(Boolean);
       if (existingId) {
-        updated.push({ ...profile, companyId: existingId, matchStatus: profile.matchStatus || "synced" });
+        let matchStatus: EnrichedConnectionProfile["matchStatus"] = "synced";
+        try {
+          const { generated } = await generateMatchesForCompany(existingId, {
+            investors: investorsCache,
+          });
+          matchesGenerated += generated;
+          if (generated > 0) matchStatus = "matched";
+        } catch (error) {
+          console.warn("[Matching] Failed for existing company", existingId, error);
+        }
+        updated.push({ ...profile, companyId: existingId, matchStatus });
         continue;
       }
 
@@ -177,6 +197,9 @@ async function main() {
   console.log(
     `✅ Done. Investors added: ${result.investorsAdded}, Companies added: ${result.companiesAdded}, Matches generated: ${result.matchesGenerated}`,
   );
+
+  // Ensure the script exits cleanly even if the DB pool keeps handles open.
+  process.exit(0);
 }
 
 main().catch(error => {

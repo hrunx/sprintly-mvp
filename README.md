@@ -99,6 +99,16 @@ External data source integrations with beautiful status cards:
 - **Auto-Population**: Revenue, team size, market data populate automatically
 - **Smart Analysis**: Understand business model, traction, and competitive landscape
 
+---
+
+## 🔥 Recent Updates (Demo Data + LLM Enrichment)
+
+- **Live LinkedIn Import**: `/Connections.csv` (first 20) enriched via OpenAI; stored in `server/data/connection-profiles.json` and synced into MySQL with match status.
+- **Real Matches Everywhere**: Matches page, company profile, and settings preview now render live DB data (no hardcoded sample cards). Investor badges are highlighted for visibility.
+- **Semantic Search**: Settings preview and Search page use OpenAI reranking (with fallback) for semantic results.
+- **Demo Auth Bypass**: Dev mode injects a demo user so tRPC protected routes work locally without cookies.
+- **Stable Builds**: `pnpm build` succeeds (minor Rollup chunk-size warning only).
+
 ![Pitch Deck Upload](docs/images/pitch-deck-upload.png)
 
 ### 🎨 **No-Code Configuration**
@@ -321,11 +331,17 @@ VITE_APP_ID=sprintly-local
 # Client branding
 VITE_APP_TITLE=Sprintly AI
 VITE_APP_LOGO=/logo.svg
+
+# AI & scraping (optional)
+OPENAI_API_KEY=sk-...
+OPENAI_MODEL=gpt-4o-mini
+FIRECRAWL_API_KEY=local-demo
+FIRECRAWL_BASE_URL=http://localhost:3002
 ```
 
 Notes:
 - Demo mode disables authentication. All features (CSV import, matching, settings) work without login.
-- AI and storage integrations are optional and disabled by default.
+- AI, Firecrawl scraping, and storage integrations are optional and disabled by default. Firecrawl ships in `docker-compose.yml` on port `3002`.
 
 ---
 
@@ -578,7 +594,7 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 ## 📧 Contact
 
 **Hrun Shafquat**
-- Email: h.shafquat@gasable.com
+- Email: hrn@hwah.net
 - GitHub: [@hrunx](https://github.com/hrunx)
 - Project: [https://github.com/hrunx/sprintly-mvp](https://github.com/hrunx/sprintly-mvp)
 

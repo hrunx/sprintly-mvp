@@ -15,7 +15,6 @@ import {
   Linkedin,
   ArrowLeft,
   Network,
-  Users,
 } from "lucide-react";
 import { useLocation } from "wouter";
 
@@ -24,10 +23,8 @@ export default function InvestorProfile() {
   const [, setLocation] = useLocation();
   const investorId = params?.id ? parseInt(params.id) : 0;
 
-  const { data: investor, isLoading } = trpc.entities.byId.useQuery({ id: investorId });
-  const { data: connections, isLoading: connectionsLoading } = trpc.entities.connections.useQuery({
-    entityId: investorId,
-  });
+  const { data: investor, isLoading } = trpc.investors.byId.useQuery({ id: investorId });
+  const { data: connections, isLoading: connectionsLoading } = trpc.connections.list.useQuery();
 
   if (isLoading) {
     return (
@@ -91,6 +88,15 @@ export default function InvestorProfile() {
         .filter((tag: string | undefined) => !!tag),
     ),
   );
+  const connectionProfile = connections?.find((c: any) => c.investorId === investorId);
+  const scrapedFacts = connectionProfile?.scrapedFacts || [];
+  const scrapedSummary = connectionProfile?.scrapedSummary;
+  const notableInvestments = investor.notableInvestments
+    ? investor.notableInvestments.split(",").map(item => item.trim()).filter(Boolean)
+    : [];
+  const portfolioCompanies = investor.portfolioCompanies
+    ? investor.portfolioCompanies.split(",").map(item => item.trim()).filter(Boolean)
+    : [];
 
   const avatarUrl =
     investor.avatarUrl ||
@@ -260,18 +266,56 @@ export default function InvestorProfile() {
         </CardContent>
       </Card>
 
-      {/* Network Connections */}
+      {/* Track Record */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Track Record</CardTitle>
+          <CardDescription>Past investments and portfolio</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {portfolioCompanies.length > 0 && (
+            <div>
+              <div className="text-xs text-muted-foreground mb-1">Portfolio</div>
+              <div className="flex flex-wrap gap-2">
+                {portfolioCompanies.map((company, idx) => (
+                  <Badge key={`${company}-${idx}`} variant="outline">
+                    {company}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
+          {notableInvestments.length > 0 && (
+            <div>
+              <div className="text-xs text-muted-foreground mb-1">Notable Investments</div>
+              <div className="flex flex-wrap gap-2">
+                {notableInvestments.map((item, idx) => (
+                  <Badge key={`${item}-${idx}`} variant="secondary">
+                    {item}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
+          {investor.investmentCount && (
+            <div className="text-sm text-muted-foreground">
+              Total investments: <span className="font-semibold text-foreground">{investor.investmentCount}</span>
+            </div>
+          )}
+          {!portfolioCompanies.length && !notableInvestments.length && !investor.investmentCount && (
+            <p className="text-muted-foreground text-sm">No track record details yet.</p>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Enrichment */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Network className="h-5 w-5" />
-            Network Connections
+            Enrichment
           </CardTitle>
-          <CardDescription>
-            {connectionsLoading
-              ? "Loading connections..."
-              : `${connections?.length || 0} connections in the network`}
-          </CardDescription>
+          <CardDescription>Scraped facts from the connections import</CardDescription>
         </CardHeader>
         <CardContent>
           {connectionsLoading ? (
@@ -280,42 +324,26 @@ export default function InvestorProfile() {
                 <Skeleton key={i} className="h-16 w-full" />
               ))}
             </div>
-          ) : connections && connections.length > 0 ? (
+          ) : connectionProfile ? (
             <div className="space-y-3">
-              {connections && connections.length > 0 ? (
-                connections.slice(0, 5).map((connection: any) => (
-                  <div
-                    key={connection.id}
-                    className="flex items-center justify-between p-3 rounded-lg border"
-                  >
-                    <div className="flex items-center gap-3">
-                      <Users className="h-4 w-4 text-muted-foreground" />
-                      <div>
-                        <div className="font-medium">
-                          Connection #{connection.sourceId === investorId ? connection.targetId : connection.sourceId}
-                        </div>
-                        <div className="text-sm text-muted-foreground capitalize">
-                          {connection.relationshipType?.replace("_", " ") || "Unknown"}
-                        </div>
-                      </div>
-                    </div>
-                    <Badge variant="secondary">{connection.strength || 0}% strength</Badge>
-                  </div>
-                ))
-              ) : (
-                <p className="text-sm text-muted-foreground text-center py-4">
-                  No connections available
-                </p>
+              {scrapedSummary && (
+                <div className="p-3 rounded-lg border bg-muted/40 text-sm text-muted-foreground">
+                  {scrapedSummary}
+                </div>
               )}
-              {connections.length > 5 && (
-                <p className="text-sm text-muted-foreground text-center pt-2">
-                  And {connections.length - 5} more connections...
-                </p>
+              {scrapedFacts.length > 0 ? (
+                <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                  {scrapedFacts.map((fact: string, idx: number) => (
+                    <li key={idx}>{fact}</li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm text-muted-foreground">No scraped facts captured yet.</p>
               )}
             </div>
           ) : (
             <div className="text-center py-8 text-muted-foreground">
-              No connections found in the network
+              We haven't enriched this investor from a connections upload yet.
             </div>
           )}
         </CardContent>

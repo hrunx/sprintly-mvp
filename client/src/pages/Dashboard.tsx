@@ -2,14 +2,56 @@ import { trpc } from "@/lib/trpc";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, Building2, Network, Target, TrendingUp, Sparkles } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useMemo } from "react";
 
 export default function Dashboard() {
   const { data: analytics, isLoading } = trpc.analytics.overview.useQuery();
+  const { data: connections } = trpc.connections.list.useQuery();
+  const { data: matches } = trpc.matches.list.useQuery({ limit: 200 });
+
+  const connectionCompanyIds = useMemo(() => {
+    const ids = new Set<number>();
+    connections?.forEach(profile => {
+      if (profile.companyId) ids.add(profile.companyId);
+      profile.linkedCompanies?.forEach(company => {
+        if (company.companyId) ids.add(company.companyId);
+      });
+    });
+    return ids;
+  }, [connections]);
+
+  const connectionInvestorIds = useMemo(() => {
+    const ids = new Set<number>();
+    connections?.forEach(profile => {
+      if (profile.investorId) ids.add(profile.investorId);
+    });
+    return ids;
+  }, [connections]);
+
+  const hasConnectionData = connectionCompanyIds.size > 0 || connectionInvestorIds.size > 0;
+
+  const connectionMatches = useMemo(() => {
+    if (!matches || !hasConnectionData) return [];
+    const hasCompanyFilter = connectionCompanyIds.size > 0;
+    const hasInvestorFilter = connectionInvestorIds.size > 0;
+    return matches.filter(
+      match =>
+        (!hasCompanyFilter || connectionCompanyIds.has(match.companyId)) &&
+        (!hasInvestorFilter || connectionInvestorIds.has(match.investorId)),
+    );
+  }, [connectionCompanyIds, connectionInvestorIds, hasConnectionData, matches]);
+
+  const totalCompanies = hasConnectionData ? connectionCompanyIds.size : analytics?.totalCompanies || 0;
+  const totalInvestors = hasConnectionData ? connectionInvestorIds.size : analytics?.totalInvestors || 0;
+  const totalMatches = hasConnectionData ? connectionMatches.length : analytics?.totalMatches || 0;
+  const avgMatchScore = connectionMatches.length
+    ? Math.round(connectionMatches.reduce((sum, match) => sum + (match.score || 0), 0) / connectionMatches.length)
+    : analytics?.avgMatchScore || 0;
 
   const stats = [
     {
       title: "Total Companies",
-      value: analytics?.totalCompanies || 0,
+      value: totalCompanies,
       icon: Building2,
       description: "Companies seeking funding",
       color: "text-blue-600",
@@ -17,7 +59,7 @@ export default function Dashboard() {
     },
     {
       title: "Total Investors",
-      value: analytics?.totalInvestors || 0,
+      value: totalInvestors,
       icon: Users,
       description: "Active investors",
       color: "text-purple-600",
@@ -25,7 +67,7 @@ export default function Dashboard() {
     },
     {
       title: "Smart Matches",
-      value: analytics?.totalMatches || 0,
+      value: totalMatches,
       icon: Target,
       description: "AI-generated matches",
       color: "text-green-600",
@@ -33,7 +75,7 @@ export default function Dashboard() {
     },
     {
       title: "Avg Match Score",
-      value: `${analytics?.avgMatchScore || 0}%`,
+      value: `${avgMatchScore || 0}%`,
       icon: TrendingUp,
       description: "Match quality",
       color: "text-orange-600",
@@ -98,13 +140,13 @@ export default function Dashboard() {
             ) : (
               <div className="space-y-4">
                 <div className="flex items-baseline gap-2">
-                  <span className="text-4xl font-bold">{analytics?.avgMatchScore || 0}%</span>
+                  <span className="text-4xl font-bold">{avgMatchScore || 0}%</span>
                   <span className="text-sm text-muted-foreground">confidence score</span>
                 </div>
                 <div className="w-full bg-secondary rounded-full h-3">
                   <div
                     className="bg-gradient-to-r from-blue-500 to-purple-600 h-3 rounded-full transition-all"
-                    style={{ width: `${analytics?.avgMatchScore || 0}%` }}
+                    style={{ width: `${avgMatchScore || 0}%` }}
                   />
                 </div>
                 <p className="text-sm text-muted-foreground">

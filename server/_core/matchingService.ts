@@ -32,6 +32,14 @@ export const DEFAULT_WEIGHTS: MatchingWeights = {
   thesis: 10,
 };
 
+export function applyTemperature(score: number, temperature = 0) {
+  if (!temperature || temperature <= 0) return Math.round(score);
+  const clampedTemp = Math.min(Math.max(temperature, 0), 1);
+  const jitter = (Math.random() - 0.5) * 20 * clampedTemp; // up to +/-10 points at temp=0.5, +/-20 at temp=1
+  const adjusted = Math.round(score + jitter);
+  return Math.max(0, Math.min(100, adjusted));
+}
+
 const STAGE_ORDER = [
   "pre-seed",
   "seed",
@@ -728,4 +736,3 @@ function buildExplanation(
 
   return `This is a ${quality} match ${factorPhrase}.${fundingSentence}${thesisSentence}`.trim();
 }
-

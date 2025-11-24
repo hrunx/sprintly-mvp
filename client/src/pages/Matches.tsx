@@ -4,6 +4,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Slider } from "@/components/ui/slider";
+import { Label } from "@/components/ui/label";
 import {
   Building2,
   TrendingUp,
@@ -14,6 +16,7 @@ import {
   ExternalLink,
   ArrowRight,
   Send,
+  Flame,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -26,12 +29,30 @@ import {
 
 export default function Matches() {
   const [selectedCompany, setSelectedCompany] = useState<number | null>(null);
+  const [weights, setWeights] = useState({
+    sector: 25,
+    stage: 20,
+    geography: 10,
+    traction: 20,
+    checkSize: 15,
+    thesis: 10,
+  });
+  const [temperature, setTemperature] = useState(0.1);
+  const [lastEmails, setLastEmails] = useState<{
+    investor: { subject: string; body: string };
+    founder: { subject: string; body: string };
+  } | null>(null);
 
   const { data: companies } = trpc.companies.list.useQuery({
-    limit: 50,
+    limit: 200,
   });
+  const { data: connections } = trpc.connections.list.useQuery();
 
-  const { data: matches, isLoading } = trpc.matches.list.useQuery(
+  const {
+    data: matchesData,
+    isLoading: matchesLoading,
+    refetch: refetchMatches,
+  } = trpc.matches.list.useQuery(
     selectedCompany
       ? {
           companyId: selectedCompany,
@@ -46,26 +67,130 @@ export default function Matches() {
     { enabled: Boolean(selectedCompany) },
   );
 
+  const companyMap = useMemo(
+    () => new Map((companies || []).map(company => [company.id, company])),
+    [companies],
+  );
+
+  const connectionCompanies = useMemo(() => {
+    if (!connections) return [];
+    const items: any[] = [];
+
+    connections.forEach(profile => {
+      if (profile.role !== "founder" && profile.role !== "operator") return;
+
+      const linked =
+        (profile.linkedCompanies && profile.linkedCompanies.length > 0
+          ? profile.linkedCompanies
+          : []) || [];
+
+      if (!linked.length && profile.companyId) {
+        linked.push({
+          ...profile.companyDetails,
+          name: profile.companyDetails?.name || profile.company || profile.fullName,
+          headquarters: profile.companyDetails?.headquarters || profile.geography,
+          companyId: profile.companyId,
+        });
+      }
+
+      linked.forEach(company => {
+        const companyId = company.companyId ?? profile.companyId;
+        if (!companyId) return;
+        const dbCompany = companyMap.get(companyId);
+        items.push({
+          id: companyId,
+          companyId,
+          name: dbCompany?.name || company.name,
+          description: dbCompany?.description || company.description || profile.summary,
+          sector: dbCompany?.sector || profile.sector || profile.focusAreas?.[0],
+          stage: dbCompany?.stage || company.stage || profile.stage,
+          geography: dbCompany?.geography || company.headquarters || profile.geography,
+          websiteUrl: dbCompany?.websiteUrl || company.website,
+          founderEmail: dbCompany?.founderEmail,
+          confidence: dbCompany?.confidence ?? profile.accuracy ?? profile.confidence ?? 70,
+        });
+      });
+    });
+
+    const deduped = new Map<number, any>();
+    items.forEach(item => {
+      if (!deduped.has(item.companyId)) deduped.set(item.companyId, item);
+    });
+
+    return Array.from(deduped.values());
+  }, [connections, companyMap]);
+
+  const companyOptions = connectionCompanies.length > 0 ? connectionCompanies : companies || [];
+
+  const connectionInvestorIds = useMemo(() => {
+    const ids = new Set<number>();
+    connections?.forEach(profile => {
+      if (profile.investorId) ids.add(profile.investorId);
+    });
+    return ids;
+  }, [connections]);
+
   const requestIntroMutation = trpc.introRequests.create.useMutation();
+  const handleManualRun = async () => {
+    if (!selectedCompany) {
+      toast.error("Select a company first");
+      return;
+    }
+    try {
+      const res = await manualMatchMutation.mutateAsync({
+        companyId: selectedCompany,
+        weights,
+        temperature,
+        limit: 25,
+        persist: true,
+      });
+      toast.success("Recomputed matches", {
+        description: `Generated ${res.generated} matches using your weights`,
+      });
+      refetchMatches();
+    } catch (error: any) {
+      toast.error(error?.message || "Failed to run manual matching");
+    }
+  };
+  const manualMatchMutation = trpc.matches.manualRun.useMutation();
 
   const handleRequestIntro = async (e: React.MouseEvent, companyId: number, investorId: number) => {
     e.stopPropagation();
     try {
-      await requestIntroMutation.mutateAsync({ companyId, investorId });
-      toast.success("Introduction request sent!");
+      const res = await requestIntroMutation.mutateAsync({ companyId, investorId });
+      setLastEmails(res.emails || null);
+      toast.success("Introduction request sent!", {
+        description: res.emails ? "Draft emails prepared for both sides." : undefined,
+      });
     } catch (error) {
       toast.error("Failed to send introduction request");
     }
   };
 
   // Create a map of investor data for quick lookup
-  const investorMap = useMemo(() => new Map(investors?.map((inv) => [inv.id, inv])), [investors]);
+  const investorMap = useMemo(
+    () =>
+      new Map(
+        (investors || [])
+          .filter(inv => connectionInvestorIds.size === 0 || connectionInvestorIds.has(inv.id))
+          .map(inv => [inv.id, inv]),
+      ),
+    [connectionInvestorIds, investors],
+  );
 
   useEffect(() => {
-    if (!selectedCompany && companies && companies.length > 0) {
-      setSelectedCompany(companies[0].id);
+    if (!selectedCompany && companyOptions && companyOptions.length > 0) {
+      setSelectedCompany(companyOptions[0].id || companyOptions[0].companyId);
     }
-  }, [companies, selectedCompany]);
+  }, [companyOptions, selectedCompany]);
+
+  const filteredMatches = useMemo(() => {
+    if (!matchesData) return [];
+    if (connectionInvestorIds.size === 0) return matchesData;
+    return matchesData.filter(match => connectionInvestorIds.has(match.investorId));
+  }, [connectionInvestorIds, matchesData]);
+
+  const matches = filteredMatches;
 
   const getScoreColor = (score: number) => {
     if (score >= 80) return "text-green-600 bg-green-50 dark:bg-green-950";
@@ -104,7 +229,7 @@ export default function Matches() {
           <CardDescription>Choose a company to see investor matches</CardDescription>
         </CardHeader>
         <CardContent>
-          {companies && companies.length > 0 ? (
+          {companyOptions && companyOptions.length > 0 ? (
             <Select
               value={selectedCompany?.toString() ?? ""}
               onValueChange={(value) => setSelectedCompany(parseInt(value))}
@@ -113,8 +238,10 @@ export default function Matches() {
                 <SelectValue placeholder="Select company" />
               </SelectTrigger>
               <SelectContent>
-                {companies.map((company) => (
-                  <SelectItem key={company.id} value={company.id.toString()}>
+                {companyOptions.map((company: any) => {
+                  const value = company.companyId ?? company.id;
+                  return (
+                    <SelectItem key={value} value={value.toString()}>
                     <div className="flex items-center gap-2">
                       <Building2 className="h-4 w-4" />
                       <span>{company.name}</span>
@@ -122,17 +249,112 @@ export default function Matches() {
                         • {company.sector || "N/A"} • {company.stage || "N/A"}
                       </span>
                     </div>
-                  </SelectItem>
-                ))}
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
           ) : (
             <p className="text-sm text-muted-foreground">
-              No companies found. Import your LinkedIn CSV to get started.
+              No companies found from your LinkedIn connections. Import your CSV to get started.
             </p>
           )}
         </CardContent>
       </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Manual Matching Controls</CardTitle>
+          <CardDescription>Adjust weights and temperature, then re-run matching instantly</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-3">
+            {([
+              { key: "sector", label: "Sector alignment" },
+              { key: "stage", label: "Stage fit" },
+              { key: "geography", label: "Geography" },
+              { key: "traction", label: "Traction" },
+              { key: "checkSize", label: "Check size" },
+              { key: "thesis", label: "Thesis fit" },
+            ] as const).map(entry => (
+              <div key={entry.key} className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm">{entry.label}</Label>
+                  <Badge variant="secondary">{weights[entry.key]}%</Badge>
+                </div>
+                <Slider
+                  value={[weights[entry.key]]}
+                  max={40}
+                  step={1}
+                  onValueChange={([value]) => setWeights(prev => ({ ...prev, [entry.key]: value }))}
+                />
+              </div>
+            ))}
+          </div>
+
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <Flame className="h-4 w-4 text-orange-500" />
+              <Label>Temperature {temperature.toFixed(2)}</Label>
+            </div>
+            <Slider
+              value={[temperature * 100]}
+              onValueChange={([value]) => setTemperature(value / 100)}
+              max={100}
+              step={5}
+              className="flex-1"
+            />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-muted-foreground">
+              Higher temperature introduces variety into the ranking; lower temperature keeps it deterministic.
+            </p>
+            <Button
+              onClick={handleManualRun}
+              disabled={!selectedCompany || manualMatchMutation.isPending}
+              className="gap-2"
+            >
+              {manualMatchMutation.isPending ? (
+                <>
+                  <Sparkles className="h-4 w-4 animate-spin" />
+                  Running...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="h-4 w-4" />
+                  Start new matching
+                </>
+              )}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {lastEmails && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Email drafts ready</CardTitle>
+            <CardDescription>Copy/paste to send to both parties (sending integration coming later)</CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Badge variant="outline">Founder</Badge>
+                <span className="text-sm text-muted-foreground">{lastEmails.founder.subject}</span>
+              </div>
+              <pre className="bg-muted p-3 rounded-md text-xs whitespace-pre-wrap leading-relaxed">{lastEmails.founder.body}</pre>
+            </div>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Badge variant="outline">Investor</Badge>
+                <span className="text-sm text-muted-foreground">{lastEmails.investor.subject}</span>
+              </div>
+              <pre className="bg-muted p-3 rounded-md text-xs whitespace-pre-wrap leading-relaxed">{lastEmails.investor.body}</pre>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Matches List */}
       {!selectedCompany ? (
@@ -141,7 +363,7 @@ export default function Matches() {
             Select or import a company to see matches.
           </CardContent>
         </Card>
-      ) : isLoading ? (
+      ) : matchesLoading ? (
         <div className="space-y-4">
           {[1, 2, 3].map((i) => (
             <Card key={i}>
@@ -179,10 +401,10 @@ export default function Matches() {
                           className="w-16 h-16 rounded-full border-2 border-border"
                         />
                         <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
+                            <div className="flex items-center gap-2 mb-1">
                             <h3 className="text-xl font-semibold">{investor.name}</h3>
-                            <Badge variant="outline" className="text-xs">
-                              {investor.type}
+                            <Badge className="text-xs bg-emerald-100 text-emerald-800 border-emerald-200">
+                              {investor.type || "Investor"}
                             </Badge>
                           </div>
                           <p className="text-muted-foreground text-sm mb-2">

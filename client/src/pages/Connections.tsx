@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
+import { useLocation } from "wouter";
 
 const benefits = [
   {
@@ -43,6 +44,7 @@ function formatConfidence(value?: number | null) {
 
 export default function Connections() {
   const [csvData, setCsvData] = useState<string>("");
+  const [, setLocation] = useLocation();
   const { data: profiles = [], isLoading, refetch } = trpc.connections.list.useQuery();
 
   const syncMutation = trpc.connections.syncLinkedIn.useMutation({
@@ -80,16 +82,6 @@ export default function Connections() {
       refetch();
     },
     onError: (error) => toast.error(error.message || "Failed to process CSV"),
-  });
-
-  const pushMutation = trpc.connections.pushToMatching.useMutation({
-    onSuccess: (res) => {
-      toast.success("Sent to matching engine", {
-        description: `Matches generated: ${res.db.matchesGenerated}`,
-      });
-      refetch();
-    },
-    onError: (error) => toast.error(error.message || "Failed to push to matching"),
   });
 
   const orderedProfiles = useMemo(
@@ -248,15 +240,20 @@ export default function Connections() {
           {orderedProfiles.map(profile => (
             <Card
               key={profile.id}
-              className="border-2 hover:shadow-lg transition-shadow cursor-pointer"
-              onClick={() => {
-                if (profile.investorId) {
-                  window.location.href = `/investor/${profile.investorId}`;
-                } else if (profile.companyId) {
-                  window.location.href = `/company/${profile.companyId}`;
-                }
-              }}
+              className={`relative hover:shadow-xl transition-shadow cursor-pointer border-2 ${
+                profile.role === "investor"
+                  ? "border-emerald-500/70 bg-gradient-to-br from-emerald-50 via-white to-emerald-100/60 dark:from-emerald-950/30 dark:via-background dark:to-emerald-900/20 shadow-[0_10px_30px_rgba(16,185,129,0.25)]"
+                  : "border-slate-200 dark:border-slate-800 bg-gradient-to-br from-slate-50 via-white to-slate-100/40 dark:from-slate-900/20 dark:via-background dark:to-slate-900/10"
+              }`}
+              onClick={() => setLocation(`/connection/${profile.id}`)}
             >
+              {profile.role === "investor" && (
+                <div className="absolute -top-3 left-4">
+                  <Badge className="bg-emerald-600 text-white shadow-md shadow-emerald-200 dark:shadow-emerald-900">
+                    Investor
+                  </Badge>
+                </div>
+              )}
               <CardHeader className="flex flex-row items-start justify-between gap-3">
                 <div>
                   <CardTitle className="text-xl">{profile.fullName}</CardTitle>
@@ -264,15 +261,28 @@ export default function Connections() {
                     {profile.title || "No title"} {profile.company ? `• ${profile.company}` : ""}
                   </CardDescription>
                   <div className="flex flex-wrap gap-2 mt-2">
-                    <Badge variant="secondary" className="capitalize">{profile.role}</Badge>
+                    <Badge
+                      variant={profile.role === "investor" ? "default" : "secondary"}
+                      className={`capitalize ${profile.role === "investor" ? "bg-emerald-600 text-white" : ""}`}
+                    >
+                      {profile.role}
+                    </Badge>
                     {profile.confidence >= 90 && profile.role === "founder" && (
-                      <Badge variant="default">Startup</Badge>
+                      <Badge variant="default" className="bg-blue-600 text-white">
+                        Startup
+                      </Badge>
                     )}
-                    {profile.confidence >= 90 && profile.role === "investor" && (
-                      <Badge variant="default">Investor</Badge>
-                    )}
-                    <Badge variant="outline">Accuracy {formatConfidence(profile.accuracy)}</Badge>
-                    <Badge variant="outline">
+                    <Badge variant="outline" className="border-primary/60 text-primary">
+                      Accuracy {formatConfidence(profile.accuracy)}
+                    </Badge>
+                    <Badge
+                      variant="outline"
+                      className={
+                        profile.matchStatus === "matched"
+                          ? "border-emerald-500 text-emerald-700 dark:text-emerald-300"
+                          : "border-amber-500 text-amber-700 dark:text-amber-300"
+                      }
+                    >
                       {profile.matchStatus === "matched" ? "Matches ready" : "Pending matchmaking"}
                     </Badge>
                   </div>
@@ -280,12 +290,22 @@ export default function Connections() {
                 <div className="text-right text-sm text-muted-foreground">
                   <p>Confidence: {formatConfidence(profile.confidence)}</p>
                   {profile.lastEnrichedAt && <p>Updated {new Date(profile.lastEnrichedAt).toLocaleDateString()}</p>}
+                  <Button size="sm" variant="link" className="px-0" onClick={(e) => { e.stopPropagation(); setLocation(`/connection/${profile.id}`); }}>
+                    Open profile
+                  </Button>
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
                 <p className="text-sm leading-relaxed text-muted-foreground">
                   {profile.summary}
                 </p>
+
+                {profile.scrapedSummary && (
+                  <div className="rounded-lg border bg-muted/40 p-3 text-sm text-muted-foreground">
+                    <p className="font-semibold text-foreground mb-1">Scraped insight</p>
+                    {profile.scrapedSummary}
+                  </div>
+                )}
 
                 <div className="flex flex-wrap gap-2 text-xs">
                   {profile.sector && <Badge variant="outline">Sector: {profile.sector}</Badge>}
@@ -299,6 +319,19 @@ export default function Connections() {
                   ))}
                 </div>
 
+                {profile.linkedCompanies && profile.linkedCompanies.length > 0 && (
+                  <div className="space-y-2">
+                    <p className="text-xs font-medium text-muted-foreground">Detected companies</p>
+                    <div className="flex flex-wrap gap-2">
+                      {profile.linkedCompanies.map(company => (
+                        <Badge key={company.name} variant={company.isPrimary ? "default" : "outline"}>
+                          {company.name}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 <div className="flex flex-wrap gap-2">
                   {profile.linkedinUrl && (
                     <Button asChild variant="outline" size="sm">
@@ -306,6 +339,16 @@ export default function Connections() {
                         <LinkIcon className="h-4 w-4 mr-2" />
                         LinkedIn
                       </a>
+                    </Button>
+                  )}
+                  {profile.investorId && (
+                    <Button size="sm" variant="secondary" onClick={(e) => { e.stopPropagation(); setLocation(`/investor/${profile.investorId}`); }}>
+                      View investor
+                    </Button>
+                  )}
+                  {profile.companyId && (
+                    <Button size="sm" variant="secondary" onClick={(e) => { e.stopPropagation(); setLocation(`/company/${profile.companyId}`); }}>
+                      View company
                     </Button>
                   )}
                   <Button
