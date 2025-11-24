@@ -1,87 +1,139 @@
+import { useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, Clock, Linkedin, Mail, FolderOpen, Zap, TrendingUp, Users } from "lucide-react";
-
-const connections = [
-  {
-    id: "linkedin",
-    name: "LinkedIn",
-    icon: Linkedin,
-    status: "active",
-    description: "Import companies and investors from LinkedIn Sales Navigator and Recruiter exports",
-    features: [
-      "Bulk company import from CSV",
-      "Investor profile import",
-      "Automatic data mapping",
-      "Real-time validation"
-    ],
-    color: "bg-blue-500",
-    connected: true
-  },
-  {
-    id: "gmail",
-    name: "Gmail API",
-    icon: Mail,
-    status: "coming_soon",
-    description: "Analyze email conversations to discover warm introductions and relationship strength",
-    features: [
-      "Email intelligence analysis",
-      "Intro path discovery",
-      "Relationship scoring",
-      "Auto-detect connections"
-    ],
-    color: "bg-red-500",
-    connected: false
-  },
-  {
-    id: "gdrive",
-    name: "Google Drive",
-    icon: FolderOpen,
-    status: "coming_soon",
-    description: "Automatically analyze pitch decks and extract key metrics, traction data, and market insights",
-    features: [
-      "AI pitch deck analysis",
-      "Auto-extract metrics",
-      "Market size detection",
-      "Competitive analysis"
-    ],
-    color: "bg-green-500",
-    connected: false
-  }
-];
+import {
+  CheckCircle2,
+  Clock,
+  Zap,
+  TrendingUp,
+  Users,
+  RefreshCcw,
+  Upload,
+  Database,
+  Rocket,
+  Link as LinkIcon,
+} from "lucide-react";
+import { trpc } from "@/lib/trpc";
+import { toast } from "sonner";
 
 const benefits = [
   {
     icon: Zap,
     title: "No-Code Integration",
-    description: "Connect external data sources with just a few clicks. No technical knowledge required."
+    description: "Connect external data sources with just a few clicks. No technical knowledge required.",
   },
   {
     icon: TrendingUp,
     title: "AI-Powered Analysis",
-    description: "Automatically extract insights from your data using advanced AI and machine learning."
+    description: "Automatically enrich people and companies with LLM research and confidence scores.",
   },
   {
     icon: Users,
     title: "Network Intelligence",
-    description: "Discover hidden connections and warm introduction paths across your network."
-  }
+    description: "Discover who is an investor vs. founder and push them straight into the matchmaking engine.",
+  },
 ];
 
+function formatConfidence(value?: number | null) {
+  if (!value && value !== 0) return "N/A";
+  return `${Math.round(value)}%`;
+}
+
 export default function Connections() {
+  const { data: profiles = [], isLoading, refetch } = trpc.connections.list.useQuery();
+
+  const syncMutation = trpc.connections.syncLinkedIn.useMutation({
+    onSuccess: (res) => {
+      toast.success(`Synced ${res.imported} profiles`, {
+        description: `Investors added: ${res.db.investorsAdded}, Companies added: ${res.db.companiesAdded}`,
+      });
+      refetch();
+    },
+    onError: (error) => toast.error(error.message || "Failed to sync LinkedIn export"),
+  });
+
+  const refreshMutation = trpc.connections.refreshProfile.useMutation({
+    onSuccess: () => {
+      toast.success("Profile refreshed");
+      refetch();
+    },
+    onError: (error) => toast.error(error.message || "Failed to refresh profile"),
+  });
+
+  const uploadMutation = trpc.connections.uploadAttachment.useMutation({
+    onSuccess: () => {
+      toast.success("File attached");
+      refetch();
+    },
+    onError: (error) => toast.error(error.message || "Failed to attach file"),
+  });
+
+  const pushMutation = trpc.connections.pushToMatching.useMutation({
+    onSuccess: (res) => {
+      toast.success("Sent to matching engine", {
+        description: `Matches generated: ${res.db.matchesGenerated}`,
+      });
+      refetch();
+    },
+    onError: (error) => toast.error(error.message || "Failed to push to matching"),
+  });
+
+  const orderedProfiles = useMemo(
+    () =>
+      [...profiles].sort((a, b) => (b.accuracy || 0) - (a.accuracy || 0)),
+    [profiles],
+  );
+
+  const handleUpload = (id: string) => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "*/*";
+    input.onchange = async event => {
+      const file = (event.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        const data = reader.result as string;
+        uploadMutation.mutate({
+          id,
+          fileName: file.name,
+          mimeType: file.type || "application/octet-stream",
+          dataBase64: data,
+        });
+      };
+      reader.readAsDataURL(file);
+    };
+    input.click();
+  };
+
   return (
-    <div className="container py-8 max-w-7xl">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Connections</h1>
-        <p className="text-muted-foreground">
-          Connect external data sources to supercharge your matchmaking with AI-powered insights
-        </p>
+    <div className="container py-8 max-w-7xl space-y-8">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold mb-2">Connections</h1>
+          <p className="text-muted-foreground">
+            Import LinkedIn connections, enrich them with AI, and push investors & founders into matchmaking.
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Button
+            onClick={() => syncMutation.mutate({ limit: 20 })}
+            disabled={syncMutation.isPending}
+            className="gap-2"
+          >
+            {syncMutation.isPending ? <Clock className="h-4 w-4 animate-spin" /> : <Rocket className="h-4 w-4" />}
+            Sync first 20 from CSV
+          </Button>
+          <Button variant="outline" onClick={() => refetch()} className="gap-2" disabled={isLoading}>
+            <RefreshCcw className="h-4 w-4" />
+            Refresh
+          </Button>
+        </div>
       </div>
 
-      {/* Benefits Section */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        {benefits.map((benefit) => (
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {benefits.map(benefit => (
           <Card key={benefit.title} className="border-2">
             <CardContent className="pt-6">
               <div className="flex items-start gap-4">
@@ -98,112 +150,143 @@ export default function Connections() {
         ))}
       </div>
 
-      {/* Connections Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-        {connections.map((connection) => {
-          const Icon = connection.icon;
-          const isActive = connection.status === "active";
-          const isComingSoon = connection.status === "coming_soon";
-
-          return (
-            <Card key={connection.id} className="relative overflow-hidden border-2 hover:shadow-lg transition-shadow">
-              {/* Status Badge */}
-              <div className="absolute top-4 right-4 z-10">
-                {isActive ? (
-                  <Badge className="bg-green-500 hover:bg-green-600">
-                    <CheckCircle2 className="w-3 h-3 mr-1" />
-                    Active
-                  </Badge>
-                ) : (
-                  <Badge variant="secondary" className="bg-orange-100 text-orange-700 hover:bg-orange-200">
-                    <Clock className="w-3 h-3 mr-1" />
-                    Coming Soon
-                  </Badge>
-                )}
-              </div>
-
-              <CardHeader>
-                <div className="flex items-center gap-4 mb-2">
-                  <div className={`p-3 rounded-xl ${connection.color} text-white`}>
-                    <Icon className="w-8 h-8" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-xl">{connection.name}</CardTitle>
-                  </div>
-                </div>
-                <CardDescription className="text-sm leading-relaxed">
-                  {connection.description}
-                </CardDescription>
-              </CardHeader>
-
-              <CardContent className="space-y-4">
-                {/* Features List */}
-                <div className="space-y-2">
-                  <p className="text-sm font-medium text-muted-foreground">Features:</p>
-                  <ul className="space-y-1.5">
-                    {connection.features.map((feature, idx) => (
-                      <li key={idx} className="flex items-start gap-2 text-sm">
-                        <CheckCircle2 className="w-4 h-4 text-green-500 mt-0.5 shrink-0" />
-                        <span>{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                {/* Action Button */}
-                {isActive ? (
-                  <Button 
-                    className="w-full" 
-                    onClick={() => window.location.href = '/import'}
-                  >
-                    <Zap className="w-4 h-4 mr-2" />
-                    Use Connection
-                  </Button>
-                ) : (
-                  <Button 
-                    variant="outline" 
-                    className="w-full" 
-                    disabled
-                  >
-                    <Clock className="w-4 h-4 mr-2" />
-                    Coming Soon
-                  </Button>
-                )}
-              </CardContent>
-
-              {/* Decorative gradient overlay for coming soon items */}
-              {isComingSoon && (
-                <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-muted/20 pointer-events-none" />
-              )}
-            </Card>
-          );
-        })}
-      </div>
-
-      {/* Info Card */}
-      <Card className="mt-8 border-2 border-primary/20 bg-primary/5">
-        <CardContent className="pt-6">
-          <div className="flex items-start gap-4">
-            <div className="p-3 rounded-lg bg-primary/10">
-              <Zap className="w-6 h-6 text-primary" />
-            </div>
-            <div className="flex-1">
-              <h3 className="font-semibold mb-2">More Integrations Coming Soon!</h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                We're constantly adding new data sources and integrations to make your matchmaking even more powerful. 
-                Stay tuned for updates on Salesforce, HubSpot, AngelList, and more!
+      <Card className="border-2 border-primary/20 bg-primary/5">
+        <CardContent className="pt-6 flex flex-col gap-2">
+          <div className="flex items-center gap-3">
+            <Database className="h-5 w-5 text-primary" />
+            <div>
+              <p className="font-semibold">LinkedIn export detected</p>
+              <p className="text-sm text-muted-foreground">
+                The backend reads `/Connections.csv` (first 20 rows) and enriches each person with LLM + heuristics.
               </p>
-              <div className="flex flex-wrap gap-2">
-                <Badge variant="outline">Salesforce</Badge>
-                <Badge variant="outline">HubSpot</Badge>
-                <Badge variant="outline">AngelList</Badge>
-                <Badge variant="outline">Crunchbase</Badge>
-                <Badge variant="outline">PitchBook</Badge>
-              </div>
             </div>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Badge variant="outline">Investors mapped: {profiles.filter(p => p.role === "investor").length}</Badge>
+            <Badge variant="outline">Founders mapped: {profiles.filter(p => p.role === "founder").length}</Badge>
+            <Badge variant="outline">Awaiting files: {profiles.filter(p => !p.attachedFiles?.length).length}</Badge>
           </div>
         </CardContent>
       </Card>
+
+      {isLoading ? (
+        <Card>
+          <CardContent className="p-6 text-muted-foreground">Loading connections…</CardContent>
+        </Card>
+      ) : orderedProfiles.length === 0 ? (
+        <Card className="border-dashed">
+          <CardContent className="p-8 text-center space-y-3">
+            <h3 className="text-xl font-semibold">No profiles yet</h3>
+            <p className="text-sm text-muted-foreground">
+              Click “Sync first 20 from CSV” to import the LinkedIn export automatically.
+            </p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+          {orderedProfiles.map(profile => (
+            <Card key={profile.id} className="border-2 hover:shadow-lg transition-shadow">
+              <CardHeader className="flex flex-row items-start justify-between gap-3">
+                <div>
+                  <CardTitle className="text-xl">{profile.fullName}</CardTitle>
+                  <CardDescription className="text-sm">
+                    {profile.title || "No title"} {profile.company ? `• ${profile.company}` : ""}
+                  </CardDescription>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    <Badge variant="secondary" className="capitalize">{profile.role}</Badge>
+                    <Badge variant="outline">Accuracy {formatConfidence(profile.accuracy)}</Badge>
+                    <Badge variant="outline">
+                      {profile.matchStatus === "matched" ? "Matches ready" : "Pending matchmaking"}
+                    </Badge>
+                  </div>
+                </div>
+                <div className="text-right text-sm text-muted-foreground">
+                  <p>Confidence: {formatConfidence(profile.confidence)}</p>
+                  {profile.lastEnrichedAt && <p>Updated {new Date(profile.lastEnrichedAt).toLocaleDateString()}</p>}
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-sm leading-relaxed text-muted-foreground">
+                  {profile.summary}
+                </p>
+
+                <div className="flex flex-wrap gap-2 text-xs">
+                  {profile.sector && <Badge variant="outline">Sector: {profile.sector}</Badge>}
+                  {profile.stage && <Badge variant="outline">Stage: {profile.stage}</Badge>}
+                  {profile.geography && <Badge variant="outline">Geo: {profile.geography}</Badge>}
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  {profile.tags?.slice(0, 6).map(tag => (
+                    <Badge key={tag} variant="outline">{tag}</Badge>
+                  ))}
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  {profile.linkedinUrl && (
+                    <Button asChild variant="outline" size="sm">
+                      <a href={profile.linkedinUrl} target="_blank" rel="noreferrer">
+                        <LinkIcon className="h-4 w-4 mr-2" />
+                        LinkedIn
+                      </a>
+                    </Button>
+                  )}
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    className="gap-1"
+                    onClick={() => handleUpload(profile.id)}
+                    disabled={uploadMutation.isPending}
+                  >
+                    <Upload className="h-4 w-4" />
+                    Upload file
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="gap-1"
+                    onClick={() => refreshMutation.mutate({ id: profile.id })}
+                    disabled={refreshMutation.isPending}
+                  >
+                    <RefreshCcw className="h-4 w-4" />
+                    Re-enrich
+                  </Button>
+                  <Button
+                    size="sm"
+                    className="gap-1"
+                    onClick={() => pushMutation.mutate({ id: profile.id })}
+                    disabled={pushMutation.isPending}
+                  >
+                    <CheckCircle2 className="h-4 w-4" />
+                    Push to matching
+                  </Button>
+                </div>
+
+                {profile.attachedFiles?.length ? (
+                  <div className="space-y-2">
+                    <p className="text-xs font-medium text-muted-foreground">Attached files</p>
+                    <ul className="space-y-1">
+                      {profile.attachedFiles.map(file => (
+                        <li key={file.id} className="flex items-center justify-between text-sm">
+                          <span className="truncate">{file.name}</span>
+                          <a
+                            href={file.url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-primary text-xs"
+                          >
+                            View
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

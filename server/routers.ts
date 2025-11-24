@@ -16,6 +16,177 @@ import {
 } from "./_core/importUtils";
 import { generateMatchesForCompany, generateMatchesForInvestor } from "./_core/matchingExecutor";
 import { getCsvLines, splitCsvLine } from "./_core/csvParser";
+import path from "path";
+import { parseLinkedInConnections, enrichConnection } from "./_core/connections/enrichment";
+import { loadConnectionProfiles, saveConnectionProfiles, upsertProfile } from "./_core/connections/store";
+import { EnrichedConnectionProfile } from "./_core/connections/types";
+
+const LINKEDIN_EXPORT_PATH = path.resolve(process.cwd(), "../Connections.csv");
+
+const normalizeDataUrl = (payload: string, mimeType: string) => {
+  const cleaned = payload.startsWith("data:")
+    ? payload.split(",").slice(1).join(",")
+    : payload;
+  return `data:${mimeType};base64,${cleaned}`;
+};
+
+async function syncProfilesToDatabase(
+  profiles: EnrichedConnectionProfile[],
+): Promise<{
+  investorsAdded: number;
+  companiesAdded: number;
+  matchesGenerated: number;
+  profiles: EnrichedConnectionProfile[];
+}> {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Connections] Database not available, skipping persistence");
+    return { investorsAdded: 0, companiesAdded: 0, matchesGenerated: 0, profiles };
+  }
+
+  const updatedProfiles = profiles.map(profile => ({ ...profile }));
+  let investorsAdded = 0;
+  let companiesAdded = 0;
+  let matchesGenerated = 0;
+
+  const existingInvestors = await db
+    .select({
+      id: investors.id,
+      name: investors.name,
+      firm: investors.firm,
+      email: investors.email,
+      linkedinUrl: investors.linkedinUrl,
+      websiteUrl: investors.websiteUrl,
+    })
+    .from(investors);
+
+  const existingCompanies = await db
+    .select({
+      id: companies.id,
+      name: companies.name,
+      websiteUrl: companies.websiteUrl,
+      founderEmail: companies.founderEmail,
+      founderLinkedin: companies.founderLinkedin,
+    })
+    .from(companies);
+
+  const investorKeyToId = new Map<string, number>();
+  existingInvestors.forEach(inv => {
+    getInvestorDedupKeys(inv).forEach(key => investorKeyToId.set(key, inv.id!));
+  });
+
+  const companyKeyToId = new Map<string, number>();
+  existingCompanies.forEach(comp => {
+    getCompanyDedupKeys(comp).forEach(key => companyKeyToId.set(key, comp.id!));
+  });
+
+  const investorsCache = await listAllInvestors();
+  const companiesCache = await listAllCompanies();
+
+  for (const profile of updatedProfiles) {
+    if (profile.role === "investor") {
+      const normalized = normalizeInvestorRecord({
+        name: profile.fullName,
+        firm: profile.company || "Independent",
+        title: profile.title,
+        email: profile.email,
+        linkedin: profile.linkedinUrl,
+        sector: profile.sector || profile.focusAreas?.[0],
+        stage: profile.stage,
+        geography: profile.geography,
+        checkSizeMin: profile.checkSizeMin,
+        checkSizeMax: profile.checkSizeMax,
+        thesis: profile.thesis || profile.summary,
+        focusSectors: profile.focusAreas,
+        tags: profile.tags,
+      });
+
+      const keys = getInvestorDedupKeys(normalized);
+      const existingId = keys.map(key => investorKeyToId.get(key)).find(Boolean);
+
+      if (existingId) {
+        profile.investorId = existingId;
+        profile.matchStatus = profile.matchStatus || "synced";
+        continue;
+      }
+
+      await db.insert(investors).values({
+        ...normalized,
+        bio: normalized.bio || profile.summary,
+        thesis: normalized.thesis || profile.thesis || profile.summary,
+        confidence: profile.accuracy || profile.confidence || 80,
+        tags: normalized.tags ?? JSON.stringify({ focusAreas: profile.focusAreas || [], importedFrom: "connections_csv" }),
+      });
+      investorsAdded++;
+
+      const [inserted] = await db.select().from(investors).orderBy(desc(investors.id)).limit(1);
+      if (inserted?.id) {
+        profile.investorId = inserted.id;
+        profile.matchStatus = "synced";
+        keys.forEach(key => investorKeyToId.set(key, inserted.id));
+        try {
+          const { generated } = await generateMatchesForInvestor(inserted.id, {
+            companies: companiesCache,
+          });
+          matchesGenerated += generated;
+          if (generated > 0) profile.matchStatus = "matched";
+        } catch (error) {
+          console.warn("[Matching] Failed to compute matches for investor", inserted.id, error);
+        }
+      }
+    } else if (profile.role === "founder") {
+      const normalizedCompany = normalizeCompanyRecord({
+        name: profile.company || `${profile.fullName}'s Company`,
+        description: profile.summary,
+        sector: profile.sector || profile.focusAreas?.[0],
+        geography: profile.geography,
+        stage: profile.stage,
+        founderName: profile.fullName,
+        founderEmail: profile.email,
+        founderLinkedin: profile.linkedinUrl,
+        tags: profile.tags,
+      });
+
+      const keys = getCompanyDedupKeys(normalizedCompany);
+      const existingId = keys.map(key => companyKeyToId.get(key)).find(Boolean);
+
+      if (existingId) {
+        profile.companyId = existingId;
+        profile.matchStatus = profile.matchStatus || "synced";
+        continue;
+      }
+
+      await db.insert(companies).values({
+        ...normalizedCompany,
+        confidence: profile.accuracy || profile.confidence || 75,
+      });
+      companiesAdded++;
+
+      const [insertedCompany] = await db.select().from(companies).orderBy(desc(companies.id)).limit(1);
+      if (insertedCompany?.id) {
+        profile.companyId = insertedCompany.id;
+        profile.matchStatus = "synced";
+        keys.forEach(key => companyKeyToId.set(key, insertedCompany.id));
+        try {
+          const { generated } = await generateMatchesForCompany(insertedCompany.id, {
+            investors: investorsCache,
+          });
+          matchesGenerated += generated;
+          if (generated > 0) profile.matchStatus = "matched";
+        } catch (error) {
+          console.warn("[Matching] Failed to compute matches for company", insertedCompany.id, error);
+        }
+      }
+    }
+  }
+
+  return {
+    investorsAdded,
+    companiesAdded,
+    matchesGenerated,
+    profiles: updatedProfiles,
+  };
+}
 
 export const appRouter = router({
   import: router({
@@ -303,6 +474,153 @@ export const appRouter = router({
         }
         
         return { imported, errors, total: input.investors.length, matchesGenerated };
+      }),
+  }),
+  connections: router({
+    list: publicProcedure.query(async () => {
+      return loadConnectionProfiles();
+    }),
+
+    syncLinkedIn: protectedProcedure
+      .input(z.object({ limit: z.number().min(1).max(50).optional() }).optional())
+      .mutation(async ({ input }) => {
+        const limit = input?.limit ?? 20;
+        let csvData = "";
+        try {
+          const fs = await import("fs/promises");
+          csvData = await fs.readFile(LINKEDIN_EXPORT_PATH, "utf-8");
+        } catch (error) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: `LinkedIn export not found at ${LINKEDIN_EXPORT_PATH}`,
+          });
+        }
+
+        const parsed = parseLinkedInConnections(csvData, limit);
+        const errors: Array<{ name: string; error: string }> = [];
+        const enriched: EnrichedConnectionProfile[] = [];
+
+        for (const row of parsed) {
+          try {
+            const profile = await enrichConnection(row);
+            enriched.push(profile);
+          } catch (error: any) {
+            errors.push({
+              name: `${row.firstName} ${row.lastName}`.trim() || row.linkedinUrl || "Unknown",
+              error: error?.message || "Failed to enrich profile",
+            });
+          }
+        }
+
+        let merged = await loadConnectionProfiles();
+        enriched.forEach(profile => {
+          merged = upsertProfile(merged, profile);
+        });
+
+        const syncResult = await syncProfilesToDatabase(merged);
+        await saveConnectionProfiles(syncResult.profiles);
+
+        return {
+          imported: enriched.length,
+          errors,
+          db: {
+            investorsAdded: syncResult.investorsAdded,
+            companiesAdded: syncResult.companiesAdded,
+            matchesGenerated: syncResult.matchesGenerated,
+          },
+          profiles: syncResult.profiles,
+        };
+      }),
+
+    refreshProfile: protectedProcedure
+      .input(z.object({ id: z.string() }))
+      .mutation(async ({ input }) => {
+        const profiles = await loadConnectionProfiles();
+        const current = profiles.find(p => p.id === input.id);
+        if (!current) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "Profile not found" });
+        }
+
+        const updated = await enrichConnection(current.source);
+        updated.attachedFiles = current.attachedFiles;
+        updated.investorId = current.investorId;
+        updated.companyId = current.companyId;
+
+        let merged = upsertProfile(profiles, updated);
+        const syncResult = await syncProfilesToDatabase(merged);
+        merged = syncResult.profiles;
+        await saveConnectionProfiles(merged);
+
+        const refreshed = merged.find(p => p.id === updated.id) || updated;
+        return {
+          profile: refreshed,
+          db: {
+            investorsAdded: syncResult.investorsAdded,
+            companiesAdded: syncResult.companiesAdded,
+            matchesGenerated: syncResult.matchesGenerated,
+          },
+        };
+      }),
+
+    uploadAttachment: protectedProcedure
+      .input(z.object({
+        id: z.string(),
+        fileName: z.string(),
+        mimeType: z.string(),
+        dataBase64: z.string(),
+      }))
+      .mutation(async ({ input }) => {
+        let profiles = await loadConnectionProfiles();
+        const target = profiles.find(p => p.id === input.id);
+        if (!target) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "Profile not found" });
+        }
+
+        const dataUrl = normalizeDataUrl(input.dataBase64, input.mimeType);
+        const size = Math.round((dataUrl.length * 3) / 4);
+        const attachment = {
+          id: `${Date.now()}`,
+          name: input.fileName,
+          mimeType: input.mimeType,
+          size,
+          url: dataUrl,
+          uploadedAt: new Date().toISOString(),
+        };
+
+        const updated: EnrichedConnectionProfile = {
+          ...target,
+          attachedFiles: [...(target.attachedFiles || []), attachment],
+        };
+
+        profiles = upsertProfile(profiles, updated);
+        await saveConnectionProfiles(profiles);
+
+        return updated;
+      }),
+
+    pushToMatching: protectedProcedure
+      .input(z.object({ id: z.string() }))
+      .mutation(async ({ input }) => {
+        let profiles = await loadConnectionProfiles();
+        const target = profiles.find(p => p.id === input.id);
+        if (!target) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "Profile not found" });
+        }
+
+        const syncResult = await syncProfilesToDatabase([target]);
+        const updated = syncResult.profiles[0] || target;
+
+        profiles = upsertProfile(profiles, updated);
+        await saveConnectionProfiles(profiles);
+
+        return {
+          profile: updated,
+          db: {
+            investorsAdded: syncResult.investorsAdded,
+            companiesAdded: syncResult.companiesAdded,
+            matchesGenerated: syncResult.matchesGenerated,
+          },
+        };
       }),
   }),
   settings: router({
