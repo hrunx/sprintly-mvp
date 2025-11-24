@@ -21,7 +21,22 @@ services:
       timeout: 5s
       retries: 20
 
+  firecrawl:
+    image: ghcr.io/mendableai/firecrawl:latest
+    environment:
+      - PORT=3002
+      - FIRECRAWL_API_KEY=${FIRECRAWL_API_KEY:-local-demo}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - DISABLE_AUTH=true
+    ports:
+      - "3002:3002"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3002/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
 volumes:
   mysql_data:
-
 

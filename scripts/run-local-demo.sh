@@ -23,10 +23,13 @@ export DATABASE_URL="mysql://sprintly:sprintly@localhost:3307/sprintly"
 if [[ ! -d node_modules ]]; then
   echo "📥 Installing dependencies..."
   pnpm install --frozen-lockfile
+elif [[ ! -x node_modules/.bin/cross-env ]]; then
+  echo "📥 cross-env missing; installing dev dependencies..."
+  pnpm install --frozen-lockfile
 fi
 
-echo "🐬 Starting MySQL (docker compose up -d mysql)..."
-docker compose up -d mysql
+echo "🐬 Starting services (docker compose up -d mysql firecrawl)..."
+docker compose up -d mysql firecrawl
 
 echo "⏳ Waiting for MySQL to become healthy..."
 for i in {1..30}; do
