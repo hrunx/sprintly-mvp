@@ -1,9 +1,9 @@
+import { useMemo } from "react";
 import { trpc } from "@/lib/trpc";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Network as NetworkIcon, Users, Building2, TrendingUp } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useMemo } from "react";
 
 export default function Network() {
   const { data: sectorDistribution, isLoading: sectorsLoading } =
@@ -11,7 +11,6 @@ export default function Network() {
   const { data: analytics, isLoading: analyticsLoading } = trpc.analytics.overview.useQuery();
   const { data: recentActivity } = trpc.analytics.recentActivity.useQuery();
   const { data: topEntities } = trpc.analytics.topEntities.useQuery();
-  const { data: connections, isLoading: connectionsLoading } = trpc.connections.list.useQuery();
   const { data: matches, isLoading: matchesLoading } = trpc.matches.list.useQuery({ limit: 200 });
   const { data: companies, isLoading: companiesLoading } = trpc.companies.list.useQuery({ limit: 200 });
   const { data: investors, isLoading: investorsLoading } = trpc.investors.list.useQuery({ limit: 200 });
@@ -25,41 +24,11 @@ export default function Network() {
     [investors],
   );
 
-  const connectionCompanyIds = useMemo(() => {
-    const ids = new Set<number>();
-    connections?.forEach(profile => {
-      if (profile.companyId) ids.add(profile.companyId);
-      profile.linkedCompanies?.forEach(company => {
-        if (company.companyId) ids.add(company.companyId);
-      });
-    });
-    return ids;
-  }, [connections]);
+  const filteredMatches = matches || [];
 
-  const connectionInvestorIds = useMemo(() => {
-    const ids = new Set<number>();
-    connections?.forEach(profile => {
-      if (profile.investorId) ids.add(profile.investorId);
-    });
-    return ids;
-  }, [connections]);
-
-  const hasConnectionData = connectionCompanyIds.size > 0 || connectionInvestorIds.size > 0;
-
-  const connectionMatches = useMemo(() => {
-    if (!matches || !hasConnectionData) return [];
-    const hasCompanyFilter = connectionCompanyIds.size > 0;
-    const hasInvestorFilter = connectionInvestorIds.size > 0;
-    return matches.filter(
-      match =>
-        (!hasCompanyFilter || connectionCompanyIds.has(match.companyId)) &&
-        (!hasInvestorFilter || connectionInvestorIds.has(match.investorId)),
-    );
-  }, [connectionCompanyIds, connectionInvestorIds, hasConnectionData, matches]);
-
-  const totalCompanies = hasConnectionData ? connectionCompanyIds.size : analytics?.totalCompanies || 0;
-  const totalInvestors = hasConnectionData ? connectionInvestorIds.size : analytics?.totalInvestors || 0;
-  const totalMatches = hasConnectionData ? connectionMatches.length : analytics?.totalMatches || 0;
+  const totalCompanies = analytics?.totalCompanies || companies?.length || 0;
+  const totalInvestors = analytics?.totalInvestors || investors?.length || 0;
+  const totalMatches = analytics?.totalMatches || filteredMatches.length || 0;
 
   const density =
     totalMatches && totalCompanies + totalInvestors > 1
@@ -80,45 +49,16 @@ export default function Network() {
       ? ((totalMatches / (totalCompanies * totalInvestors)) * 100).toFixed(1)
       : "0.0";
 
-  const connectionSectorDistribution = useMemo(() => {
-    const counts = new Map<string, number>();
-    connectionCompanyIds.forEach(companyId => {
-      const company = companyMap.get(companyId);
-      const sector = company?.sector || "Unknown";
-      counts.set(sector, (counts.get(sector) || 0) + 1);
-    });
-    return Array.from(counts.entries()).map(([sector, count]) => ({ sector, count }));
-  }, [companyMap, connectionCompanyIds]);
+  const sectorData = sectorDistribution || [];
+  const sectorTotal = useMemo(
+    () => sectorData.reduce((sum, item: any) => sum + Number((item as any).count || 0), 0),
+    [sectorData],
+  );
 
-  const sectorData = connectionSectorDistribution.length > 0 ? connectionSectorDistribution : sectorDistribution || [];
+  const activity = useMemo(() => recentActivity ?? null, [recentActivity]);
 
-  const filteredTopInvestors =
-    topEntities?.investors.filter(
-      entity =>
-        !entity?.id || connectionInvestorIds.size === 0 || connectionInvestorIds.has(entity.id),
-    ) || [];
-  const filteredTopCompanies =
-    topEntities?.companies.filter(
-      entity => !entity?.id || connectionCompanyIds.size === 0 || connectionCompanyIds.has(entity.id),
-    ) || [];
-
-  const activity = useMemo(() => {
-    if (!recentActivity) return null;
-    const hasFilters = connectionCompanyIds.size > 0 || connectionInvestorIds.size > 0;
-    if (!hasFilters) return recentActivity;
-    return {
-      matches: recentActivity.matches.filter(
-        item => connectionCompanyIds.has(item.companyId) && connectionInvestorIds.has(item.investorId),
-      ),
-      companies: recentActivity.companies.filter(item => connectionCompanyIds.has(item.id)),
-      investors: recentActivity.investors.filter(item => connectionInvestorIds.has(item.id)),
-    };
-  }, [connectionCompanyIds, connectionInvestorIds, recentActivity]);
-
-  const topInvestors =
-    (filteredTopInvestors.length > 0 ? filteredTopInvestors : topEntities?.investors) || [];
-  const topCompanies =
-    (filteredTopCompanies.length > 0 ? filteredTopCompanies : topEntities?.companies) || [];
+  const topInvestors = topEntities?.investors || [];
+  const topCompanies = topEntities?.companies || [];
   const activityFeed = activity ?? recentActivity;
 
   const isLoading =
@@ -126,8 +66,9 @@ export default function Network() {
     analyticsLoading ||
     matchesLoading ||
     companiesLoading ||
-    investorsLoading ||
-    connectionsLoading;
+    investorsLoading;
+
+  const displayedMatches = filteredMatches.slice(0, 50);
 
   return (
     <div className="space-y-6">
@@ -220,11 +161,10 @@ export default function Network() {
           ) : sectorData && sectorData.length > 0 ? (
             <div className="space-y-4">
               {sectorData.map((item) => {
-                const total = sectorData.reduce(
-                  (sum, s) => sum + Number((s as any).count),
-                  0,
-                );
-                const percentage = ((Number((item as any).count) / Math.max(total, 1)) * 100).toFixed(1);
+                const percentage = (
+                  (Number((item as any).count) / Math.max(sectorTotal, 1)) *
+                  100
+                ).toFixed(1);
 
                 return (
                   <div key={(item as any).sector} className="space-y-2">
@@ -261,13 +201,13 @@ export default function Network() {
         <CardHeader>
           <CardTitle>Network Graph</CardTitle>
           <CardDescription>
-            Real matches between your LinkedIn connections
+            Top matches across your database
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {connectionMatches.length > 0 ? (
+          {displayedMatches.length > 0 ? (
             <div className="space-y-3">
-              {connectionMatches.map(match => {
+              {displayedMatches.map(match => {
                 const company = companyMap.get(match.companyId);
                 const investor = investorMap.get(match.investorId);
                 return (
@@ -289,7 +229,7 @@ export default function Network() {
                     <div className="text-xs text-muted-foreground text-right">
                       {company?.sector || investor?.sector
                         ? `${company?.sector || "Sector"} • ${investor?.sector || "Thesis"}`
-                        : "Match from connections"}
+                        : "Match from database"}
                     </div>
                   </div>
                 );
@@ -297,7 +237,7 @@ export default function Network() {
             </div>
           ) : (
             <div className="aspect-video rounded-lg border-2 border-dashed flex items-center justify-center bg-muted/40 text-sm text-muted-foreground text-center px-6">
-              No connection matches yet. Import your LinkedIn CSV and run matching to populate this graph.
+              No matches yet. Import companies and investors, then run matching to populate this graph.
             </div>
           )}
         </CardContent>

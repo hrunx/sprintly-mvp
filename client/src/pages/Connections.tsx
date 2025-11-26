@@ -122,6 +122,22 @@ export default function Connections() {
     input.click();
   };
 
+  const getCardStyle = (role: string) => {
+    if (role === "investor") {
+      return "border-emerald-500/70 bg-gradient-to-br from-emerald-50 via-white to-emerald-100/60 dark:from-emerald-950/30 dark:via-background dark:to-emerald-900/20 shadow-[0_10px_30px_rgba(16,185,129,0.25)]";
+    }
+    if (role === "founder") {
+      return "border-blue-500/70 bg-gradient-to-br from-blue-50 via-white to-blue-100/60 dark:from-blue-950/30 dark:via-background dark:to-blue-900/20 shadow-[0_10px_30px_rgba(59,130,246,0.25)]";
+    }
+    return "border-slate-200 dark:border-slate-800 bg-gradient-to-br from-slate-50 via-white to-slate-100/40 dark:from-slate-900/20 dark:via-background dark:to-slate-900/10";
+  };
+
+  const getRoleBadge = (role: string) => {
+    if (role === "investor") return { label: "Investor", className: "bg-emerald-600 text-white shadow-md shadow-emerald-200 dark:shadow-emerald-900" };
+    if (role === "founder") return { label: "Founder", className: "bg-blue-600 text-white shadow-md shadow-blue-200 dark:shadow-blue-900" };
+    return null;
+  };
+
   return (
     <div className="container py-8 max-w-7xl space-y-8">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -237,20 +253,18 @@ export default function Connections() {
         </Card>
       ) : (
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-          {orderedProfiles.map(profile => (
+          {orderedProfiles.map(profile => {
+            const roleBadge = getRoleBadge(profile.role);
+            return (
             <Card
               key={profile.id}
-              className={`relative hover:shadow-xl transition-shadow cursor-pointer border-2 ${
-                profile.role === "investor"
-                  ? "border-emerald-500/70 bg-gradient-to-br from-emerald-50 via-white to-emerald-100/60 dark:from-emerald-950/30 dark:via-background dark:to-emerald-900/20 shadow-[0_10px_30px_rgba(16,185,129,0.25)]"
-                  : "border-slate-200 dark:border-slate-800 bg-gradient-to-br from-slate-50 via-white to-slate-100/40 dark:from-slate-900/20 dark:via-background dark:to-slate-900/10"
-              }`}
+              className={`relative hover:shadow-xl transition-shadow cursor-pointer border-2 ${getCardStyle(profile.role)}`}
               onClick={() => setLocation(`/connection/${profile.id}`)}
             >
-              {profile.role === "investor" && (
+              {roleBadge && (
                 <div className="absolute -top-3 left-4">
-                  <Badge className="bg-emerald-600 text-white shadow-md shadow-emerald-200 dark:shadow-emerald-900">
-                    Investor
+                  <Badge className={roleBadge.className}>
+                    {roleBadge.label}
                   </Badge>
                 </div>
               )}
@@ -261,12 +275,21 @@ export default function Connections() {
                     {profile.title || "No title"} {profile.company ? `• ${profile.company}` : ""}
                   </CardDescription>
                   <div className="flex flex-wrap gap-2 mt-2">
-                    <Badge
-                      variant={profile.role === "investor" ? "default" : "secondary"}
-                      className={`capitalize ${profile.role === "investor" ? "bg-emerald-600 text-white" : ""}`}
-                    >
-                      {profile.role}
-                    </Badge>
+                    {profile.role === "investor" && (
+                      <Badge variant="default" className="capitalize bg-emerald-600 text-white">
+                        Investor
+                      </Badge>
+                    )}
+                    {profile.role === "founder" && (
+                      <Badge variant="default" className="capitalize bg-blue-600 text-white">
+                        Founder
+                      </Badge>
+                    )}
+                    {profile.role !== "investor" && profile.role !== "founder" && (
+                      <Badge variant="secondary" className="capitalize">
+                        {profile.role}
+                      </Badge>
+                    )}
                     {profile.confidence >= 90 && profile.role === "founder" && (
                       <Badge variant="default" className="bg-blue-600 text-white">
                         Startup
@@ -395,7 +418,7 @@ export default function Connections() {
                 ) : null}
               </CardContent>
             </Card>
-          ))}
+          ); })}
         </div>
       )}
     </div>

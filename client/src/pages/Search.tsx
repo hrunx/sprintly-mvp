@@ -22,28 +22,21 @@ export default function Search() {
   const [geography, setGeography] = useState<string>("all");
   const [useAISemantic, setUseAISemantic] = useState(true);
 
-  const { data: companies } = trpc.companies.list.useQuery(
-    {
-      search: searchTerm || undefined,
-      sector: sector === "all" ? undefined : sector,
-      stage: stage === "all" ? undefined : stage,
-      geography: geography === "all" ? undefined : geography,
-      limit: 200,
-    },
-    { enabled: false }, // only used for enriching connection-derived companies
-  );
-
-  const { data: connections } = trpc.connections.list.useQuery();
+  const { data: companies, isLoading: companiesLoading } = trpc.companies.list.useQuery({
+    search: searchTerm || undefined,
+    sector: sector === "all" ? undefined : sector,
+    stage: stage === "all" ? undefined : stage,
+    geography: geography === "all" ? undefined : geography,
+    limit: 200,
+  });
 
   const { data: aiResults, isLoading: aiLoading } = trpc.search.semantic.useQuery(
     { query: searchTerm, limit: 20 },
     { enabled: useAISemantic && Boolean(searchTerm) },
   );
 
-  const companyMap = useMemo(
-    () => new Map((companies || []).map((company) => [company.id, company])),
-    [companies],
-  );
+  const baseCompanies = companies || [];
+  const aiSearchActive = useAISemantic && Boolean(searchTerm);
 
   const sectorOptions = [
     { label: "Fintech", value: "Fintech" },
@@ -96,76 +89,41 @@ export default function Search() {
     return [];
   };
 
-  const connectionCompanies = useMemo(() => {
-    if (!connections) return [];
-    const items: any[] = [];
+  const matchesFilters = useMemo(() => {
+    const searchLower = searchTerm.toLowerCase();
+    const sectorLower = sector.toLowerCase();
+    const stageLower = stage.toLowerCase();
+    const geoLower = geography.toLowerCase();
 
-    connections.forEach(profile => {
-      if (profile.role !== "founder" && profile.role !== "operator") return;
-
-      const companiesForProfile =
-        (profile.linkedCompanies && profile.linkedCompanies.length > 0
-          ? profile.linkedCompanies
-          : []) ||
-        [];
-
-      if (!companiesForProfile.length) {
-        companiesForProfile.push({
-          ...profile.companyDetails,
-          name: profile.companyDetails?.name || profile.company || profile.fullName,
-          headquarters: profile.companyDetails?.headquarters || profile.geography,
-          companyId: profile.companyId,
-        });
-      }
-
-      companiesForProfile.forEach((company, idx) => {
-        const companyId = company.companyId ?? profile.companyId;
-        const dbCompany = companyId ? companyMap.get(companyId) : undefined;
-        items.push({
-          id: companyId ?? `${profile.id}-${idx}`,
-          companyId,
-          connectionId: profile.id,
-          name: dbCompany?.name || company.name,
-          description: dbCompany?.description || company.description || profile.summary,
-          sector: dbCompany?.sector || profile.sector || profile.focusAreas?.[0],
-          stage: dbCompany?.stage || company.stage || profile.stage,
-          geography: dbCompany?.geography || company.headquarters || profile.geography,
-          websiteUrl: dbCompany?.websiteUrl || company.website,
-          confidence: dbCompany?.confidence ?? profile.accuracy ?? profile.confidence ?? 70,
-          tags: dbCompany?.tags || profile.tags,
-          fundingTarget: dbCompany?.fundingTarget ?? company.fundingTarget,
-          revenue: dbCompany?.revenue ?? undefined,
-          fromConnection: true,
-        });
-      });
-    });
-
-    const deduped = new Map<string | number, any>();
-    items.forEach(item => {
-      const key = item.companyId ?? item.id;
-      if (!deduped.has(key)) {
-        deduped.set(key, item);
-      }
-    });
-
-    return Array.from(deduped.values());
-  }, [connections, companyMap]);
-
-  const filteredConnectionCompanies = useMemo(() => {
-    return connectionCompanies.filter(company => {
-      const matchesSearch =
-        !searchTerm ||
-        `${company.name} ${company.description || ""} ${company.sector || ""}`
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase());
-      const matchesSector = sector === "all" || (company.sector || "").toLowerCase() === sector.toLowerCase();
-      const matchesStage = stage === "all" || (company.stage || "").toLowerCase() === stage.toLowerCase();
-      const matchesGeo =
-        geography === "all" ||
-        (company.geography || "").toLowerCase().includes(geography.toLowerCase());
+    return (company: any) => {
+      const haystack = `${company.name} ${company.description || ""} ${company.sector || ""}`.toLowerCase();
+      const matchesSearch = !searchLower || aiSearchActive || haystack.includes(searchLower);
+      const matchesSector = sectorLower === "all" || (company.sector || "").toLowerCase() === sectorLower;
+      const matchesStage = stageLower === "all" || (company.stage || "").toLowerCase() === stageLower;
+      const matchesGeo = geoLower === "all" || (company.geography || "").toLowerCase().includes(geoLower);
       return matchesSearch && matchesSector && matchesStage && matchesGeo;
-    });
-  }, [connectionCompanies, searchTerm, sector, stage, geography]);
+    };
+  }, [aiSearchActive, geography, searchTerm, sector, stage]);
+
+  const filteredCompanies = useMemo(
+    () => baseCompanies.filter(matchesFilters),
+    [baseCompanies, matchesFilters],
+  );
+
+  const aiCompanies = useMemo(() => {
+    if (!aiSearchActive) return [];
+    const byId = new Map(baseCompanies.map(company => [company.id, company]));
+    return (aiResults?.results || [])
+      .map((result: any) => {
+        const dbCompany = byId.get(result.company.id);
+        return {
+          ...(dbCompany || result.company),
+          __aiScore: result.score,
+          __aiReason: result.reason,
+        };
+      })
+      .filter(matchesFilters);
+  }, [aiResults?.results, aiSearchActive, baseCompanies, matchesFilters]);
 
   const activeFilters = useMemo(() => {
     const filters: { label: string; value: string }[] = [];
@@ -177,59 +135,9 @@ export default function Search() {
     return filters;
   }, [sector, stage, geography, searchTerm, useAISemantic, aiResults?.usedAI]);
 
-  const formatCheckSize = (min?: number | null, max?: number | null) => {
-    if (!min && !max) return "Not specified";
-    const formatAmount = (amount: number) => {
-      if (amount >= 1000000) return `$${(amount / 1000000).toFixed(1)}M`;
-      if (amount >= 1000) return `$${(amount / 1000).toFixed(0)}K`;
-      return `$${amount}`;
-    };
-    if (min && max) return `${formatAmount(min)} - ${formatAmount(max)}`;
-    if (min) return `From ${formatAmount(min)}`;
-    if (max) return `Up to ${formatAmount(max)}`;
-    return "Not specified";
-  };
-
-  const displayCompanies =
-    useAISemantic && searchTerm
-      ? (() => {
-          // Use connection companies only; overlay AI scores when they match connection company ids.
-          const base = filteredConnectionCompanies;
-          const byId = new Map<string | number, any>();
-          base.forEach(item => byId.set(item.companyId ?? item.id, item));
-
-          (aiResults?.results || []).forEach((result: any) => {
-            const key = result.company.id;
-            if (byId.has(key)) {
-              byId.set(key, {
-                ...byId.get(key),
-                __aiScore: result.score,
-                __aiReason: result.reason,
-              });
-            }
-          });
-
-          const combined = Array.from(byId.values());
-          const deduped = new Map<string | number, any>();
-          combined.forEach(item => {
-            const key = item.id ?? item.companyId ?? `${item.connectionId ?? ""}-${item.name}`;
-            if (!deduped.has(key)) deduped.set(key, item);
-          });
-          return Array.from(deduped.values());
-        })()
-      : (() => {
-          // When browsing, show only connection companies.
-          const combined = filteredConnectionCompanies;
-          const deduped = new Map<string | number, any>();
-          combined.forEach(item => {
-            const key = item.id ?? item.companyId ?? `${item.connectionId ?? ""}-${item.name}`;
-            if (!deduped.has(key)) deduped.set(key, item);
-          });
-          return Array.from(deduped.values());
-        })();
-
+  const displayCompanies = aiSearchActive ? aiCompanies : filteredCompanies;
   const displayCount = displayCompanies.length;
-  const loading = useAISemantic && searchTerm ? aiLoading : false;
+  const loading = aiSearchActive ? aiLoading : companiesLoading;
 
   return (
     <div className="space-y-6">
@@ -365,7 +273,7 @@ export default function Search() {
             {loading ? "Searching..." : `${displayCount} Companies Found`}
           </h2>
           <p className="text-sm text-muted-foreground">
-            {useAISemantic && searchTerm
+            {aiSearchActive
               ? "AI reranks results by semantic relevance"
               : "Refine your filters to find the best matches"}
           </p>
@@ -383,6 +291,7 @@ export default function Search() {
           ) : displayCompanies && displayCompanies.length > 0 ? (
             displayCompanies.map((company: any) => {
               const tags = parseTags(company.tags);
+              const isInvestorFirm = tags.map(tag => tag.toLowerCase()).includes("investor firm".toLowerCase());
               const aiScore = company.__aiScore as number | undefined;
               const aiReason = company.__aiReason as string | undefined;
               return (
@@ -421,7 +330,7 @@ export default function Search() {
                               </Badge>
                             )}
                             <Badge variant="secondary">
-                              {company.confidence}% Quality
+                              {(company.confidence ?? 70)}% Quality
                             </Badge>
                           </div>
                         </div>
@@ -434,6 +343,13 @@ export default function Search() {
                           {company.stage && (
                             <div className="flex items-center gap-1.5">
                               <Badge variant="outline">{company.stage}</Badge>
+                            </div>
+                          )}
+                          {isInvestorFirm && (
+                            <div className="flex items-center gap-1.5">
+                              <Badge variant="outline" className="bg-amber-100 text-amber-800 border-amber-300">
+                                Investor Firm
+                              </Badge>
                             </div>
                           )}
                           {company.geography && (
@@ -474,15 +390,7 @@ export default function Search() {
 
                         <div className="flex gap-2 mt-4">
                           <Button size="sm" asChild>
-                            <a
-                              href={
-                                company.companyId
-                                  ? `/company/${company.companyId}`
-                                  : company.connectionId
-                                  ? `/connection/${company.connectionId}`
-                                  : `/company/${company.id}`
-                              }
-                            >
+                            <a href={`/company/${company.id}`}>
                               View Profile
                             </a>
                           </Button>

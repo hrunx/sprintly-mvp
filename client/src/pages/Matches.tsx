@@ -43,10 +43,10 @@ export default function Matches() {
     founder: { subject: string; body: string };
   } | null>(null);
 
+  const { data: topMatchList } = trpc.matches.list.useQuery({ limit: 1 });
   const { data: companies } = trpc.companies.list.useQuery({
     limit: 200,
   });
-  const { data: connections } = trpc.connections.list.useQuery();
 
   const {
     data: matchesData,
@@ -72,63 +72,7 @@ export default function Matches() {
     [companies],
   );
 
-  const connectionCompanies = useMemo(() => {
-    if (!connections) return [];
-    const items: any[] = [];
-
-    connections.forEach(profile => {
-      if (profile.role !== "founder" && profile.role !== "operator") return;
-
-      const linked =
-        (profile.linkedCompanies && profile.linkedCompanies.length > 0
-          ? profile.linkedCompanies
-          : []) || [];
-
-      if (!linked.length && profile.companyId) {
-        linked.push({
-          ...profile.companyDetails,
-          name: profile.companyDetails?.name || profile.company || profile.fullName,
-          headquarters: profile.companyDetails?.headquarters || profile.geography,
-          companyId: profile.companyId,
-        });
-      }
-
-      linked.forEach(company => {
-        const companyId = company.companyId ?? profile.companyId;
-        if (!companyId) return;
-        const dbCompany = companyMap.get(companyId);
-        items.push({
-          id: companyId,
-          companyId,
-          name: dbCompany?.name || company.name,
-          description: dbCompany?.description || company.description || profile.summary,
-          sector: dbCompany?.sector || profile.sector || profile.focusAreas?.[0],
-          stage: dbCompany?.stage || company.stage || profile.stage,
-          geography: dbCompany?.geography || company.headquarters || profile.geography,
-          websiteUrl: dbCompany?.websiteUrl || company.website,
-          founderEmail: dbCompany?.founderEmail,
-          confidence: dbCompany?.confidence ?? profile.accuracy ?? profile.confidence ?? 70,
-        });
-      });
-    });
-
-    const deduped = new Map<number, any>();
-    items.forEach(item => {
-      if (!deduped.has(item.companyId)) deduped.set(item.companyId, item);
-    });
-
-    return Array.from(deduped.values());
-  }, [connections, companyMap]);
-
-  const companyOptions = connectionCompanies.length > 0 ? connectionCompanies : companies || [];
-
-  const connectionInvestorIds = useMemo(() => {
-    const ids = new Set<number>();
-    connections?.forEach(profile => {
-      if (profile.investorId) ids.add(profile.investorId);
-    });
-    return ids;
-  }, [connections]);
+  const companyOptions = companies || [];
 
   const requestIntroMutation = trpc.introRequests.create.useMutation();
   const handleManualRun = async () => {
@@ -169,26 +113,28 @@ export default function Matches() {
 
   // Create a map of investor data for quick lookup
   const investorMap = useMemo(
-    () =>
-      new Map(
-        (investors || [])
-          .filter(inv => connectionInvestorIds.size === 0 || connectionInvestorIds.has(inv.id))
-          .map(inv => [inv.id, inv]),
-      ),
-    [connectionInvestorIds, investors],
+    () => new Map((investors || []).map(inv => [inv.id, inv])),
+    [investors],
   );
 
   useEffect(() => {
-    if (!selectedCompany && companyOptions && companyOptions.length > 0) {
-      setSelectedCompany(companyOptions[0].id || companyOptions[0].companyId);
+    if (selectedCompany) return;
+
+    const bestCompanyId = topMatchList?.[0]?.companyId;
+    if (bestCompanyId) {
+      setSelectedCompany(bestCompanyId);
+      return;
     }
-  }, [companyOptions, selectedCompany]);
+
+    if (companyOptions && companyOptions.length > 0) {
+      setSelectedCompany(companyOptions[0].id);
+    }
+  }, [companyOptions, selectedCompany, topMatchList]);
 
   const filteredMatches = useMemo(() => {
     if (!matchesData) return [];
-    if (connectionInvestorIds.size === 0) return matchesData;
-    return matchesData.filter(match => connectionInvestorIds.has(match.investorId));
-  }, [connectionInvestorIds, matchesData]);
+    return matchesData;
+  }, [matchesData]);
 
   const matches = filteredMatches;
 
@@ -239,16 +185,16 @@ export default function Matches() {
               </SelectTrigger>
               <SelectContent>
                 {companyOptions.map((company: any) => {
-                  const value = company.companyId ?? company.id;
+                  const value = company.id;
                   return (
                     <SelectItem key={value} value={value.toString()}>
-                    <div className="flex items-center gap-2">
-                      <Building2 className="h-4 w-4" />
-                      <span>{company.name}</span>
-                      <span className="text-muted-foreground text-xs">
-                        • {company.sector || "N/A"} • {company.stage || "N/A"}
-                      </span>
-                    </div>
+                      <div className="flex items-center gap-2">
+                        <Building2 className="h-4 w-4" />
+                        <span>{company.name}</span>
+                        <span className="text-muted-foreground text-xs">
+                          • {company.sector || "N/A"} • {company.stage || "N/A"}
+                        </span>
+                      </div>
                     </SelectItem>
                   );
                 })}

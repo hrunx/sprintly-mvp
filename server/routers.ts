@@ -468,6 +468,7 @@ async function syncProfilesToDatabase(
     const linkedCompaniesWithIds: NonNullable<EnrichedConnectionProfile["linkedCompanies"]> = [];
     let companyRelationship: string | null = null;
     if (profile.role === "investor") {
+      companyRelationship = "firm";
       const normalized = normalizeInvestorRecord({
         name: profile.fullName,
         firm: profile.investorDetails?.firm || profile.company || "Independent",
@@ -533,6 +534,55 @@ async function syncProfilesToDatabase(
             if (generated > 0) profile.matchStatus = "matched";
           } catch (error) {
             console.warn("[Matching] Failed to compute matches for investor", inserted.id, error);
+          }
+        }
+      }
+
+      // Also capture the investor's firm as a company entity so it shows in counts/search.
+      const firmName = normalized.firm || profile.company;
+      if (firmName && firmName.toLowerCase() !== "independent") {
+        const firmCompany = normalizeCompanyRecord({
+          name: firmName,
+          description: profile.summary,
+          sector: profile.sector || profile.focusAreas?.[0],
+          geography: profile.geography,
+          stage: undefined,
+          founderName: profile.fullName,
+          founderEmail: profile.email,
+          founderLinkedin: profile.linkedinUrl,
+          tags: Array.from(new Set([...(profile.tags || []), "Investor Firm"])),
+        });
+
+        const firmKeys = getCompanyDedupKeys(firmCompany);
+        const existingFirmId = firmKeys.map(key => companyKeyToId.get(key)).find(Boolean);
+
+        const attachFirm = (firmId: number) => {
+          linkedCompanyIds.push(firmId);
+          linkedCompaniesWithIds.push({
+            name: firmCompany.name,
+            companyId: firmId,
+            confidence: firmCompany.confidence ?? 80,
+            role: "firm",
+            isPrimary: true,
+          });
+          connectionCompanyIds.add(firmId);
+          profile.companyId = profile.companyId ?? firmId;
+        };
+
+        if (existingFirmId) {
+          attachFirm(existingFirmId);
+        } else {
+          await db.insert(companies).values({
+            ...firmCompany,
+            confidence: profile.accuracy || profile.confidence || 80,
+          });
+          companiesAdded++;
+
+          const [insertedFirm] = await db.select().from(companies).orderBy(desc(companies.id)).limit(1);
+          if (insertedFirm?.id) {
+            attachFirm(insertedFirm.id);
+            firmKeys.forEach(key => companyKeyToId.set(key, insertedFirm.id));
+            companiesCache.push(insertedFirm);
           }
         }
       }
@@ -659,7 +709,9 @@ async function syncProfilesToDatabase(
     const candidateInvestors = investorsCache.filter(inv => inv.id && connectionInvestorIds.has(inv.id));
     const candidateCompanies = companiesCache.filter(company => company.id && connectionCompanyIds.has(company.id));
 
-    for (const companyId of connectionCompanyIds) {
+    const companyIds = Array.from(connectionCompanyIds);
+    for (let i = 0; i < companyIds.length; i++) {
+      const companyId = companyIds[i];
       try {
         const { generated } = await generateMatchesForCompany(companyId, {
           investors: candidateInvestors,
@@ -672,7 +724,9 @@ async function syncProfilesToDatabase(
       }
     }
 
-    for (const investorId of connectionInvestorIds) {
+    const investorIds = Array.from(connectionInvestorIds);
+    for (let i = 0; i < investorIds.length; i++) {
+      const investorId = investorIds[i];
       try {
         const { generated } = await generateMatchesForInvestor(investorId, {
           companies: candidateCompanies,
@@ -1579,24 +1633,26 @@ Return up to ${limit} results with ids, scores (0-100), and a short reason.`,
       const db = await getDb();
       if (!db) return { investors: [], companies: [] };
 
+      const matchCount = sql<number>`count(*)`;
+
       const topInvestors = await db
         .select({
           investorId: matches.investorId,
-          count: desc(sql<number>`count(*)`),
+          count: matchCount,
         })
         .from(matches)
         .groupBy(matches.investorId)
-        .orderBy(desc(sql`count(*)`))
+        .orderBy(desc(matchCount))
         .limit(5);
 
       const topCompanies = await db
         .select({
           companyId: matches.companyId,
-          count: desc(sql<number>`count(*)`),
+          count: matchCount,
         })
         .from(matches)
         .groupBy(matches.companyId)
-        .orderBy(desc(sql`count(*)`))
+        .orderBy(desc(matchCount))
         .limit(5);
 
       const investorDetails = await Promise.all(

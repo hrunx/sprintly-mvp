@@ -2,51 +2,14 @@ import { trpc } from "@/lib/trpc";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, Building2, Network, Target, TrendingUp, Sparkles } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useMemo } from "react";
 
 export default function Dashboard() {
   const { data: analytics, isLoading } = trpc.analytics.overview.useQuery();
-  const { data: connections } = trpc.connections.list.useQuery();
-  const { data: matches } = trpc.matches.list.useQuery({ limit: 200 });
 
-  const connectionCompanyIds = useMemo(() => {
-    const ids = new Set<number>();
-    connections?.forEach(profile => {
-      if (profile.companyId) ids.add(profile.companyId);
-      profile.linkedCompanies?.forEach(company => {
-        if (company.companyId) ids.add(company.companyId);
-      });
-    });
-    return ids;
-  }, [connections]);
-
-  const connectionInvestorIds = useMemo(() => {
-    const ids = new Set<number>();
-    connections?.forEach(profile => {
-      if (profile.investorId) ids.add(profile.investorId);
-    });
-    return ids;
-  }, [connections]);
-
-  const hasConnectionData = connectionCompanyIds.size > 0 || connectionInvestorIds.size > 0;
-
-  const connectionMatches = useMemo(() => {
-    if (!matches || !hasConnectionData) return [];
-    const hasCompanyFilter = connectionCompanyIds.size > 0;
-    const hasInvestorFilter = connectionInvestorIds.size > 0;
-    return matches.filter(
-      match =>
-        (!hasCompanyFilter || connectionCompanyIds.has(match.companyId)) &&
-        (!hasInvestorFilter || connectionInvestorIds.has(match.investorId)),
-    );
-  }, [connectionCompanyIds, connectionInvestorIds, hasConnectionData, matches]);
-
-  const totalCompanies = hasConnectionData ? connectionCompanyIds.size : analytics?.totalCompanies || 0;
-  const totalInvestors = hasConnectionData ? connectionInvestorIds.size : analytics?.totalInvestors || 0;
-  const totalMatches = hasConnectionData ? connectionMatches.length : analytics?.totalMatches || 0;
-  const avgMatchScore = connectionMatches.length
-    ? Math.round(connectionMatches.reduce((sum, match) => sum + (match.score || 0), 0) / connectionMatches.length)
-    : analytics?.avgMatchScore || 0;
+  const totalCompanies = analytics?.totalCompanies || 0;
+  const totalInvestors = analytics?.totalInvestors || 0;
+  const totalMatches = analytics?.totalMatches || 0;
+  const avgMatchScore = analytics?.avgMatchScore || 0;
 
   const stats = [
     {
@@ -75,7 +38,8 @@ export default function Dashboard() {
     },
     {
       title: "Avg Match Score",
-      value: `${avgMatchScore || 0}%`,
+      value: avgMatchScore,
+      formatter: (val: number) => `${val}%`,
       icon: TrendingUp,
       description: "Match quality",
       color: "text-orange-600",
@@ -115,7 +79,9 @@ export default function Dashboard() {
                 {isLoading ? (
                   <Skeleton className="h-8 w-20" />
                 ) : (
-                  <div className="text-2xl font-bold">{stat.value.toLocaleString()}</div>
+                  <div className="text-2xl font-bold">
+                    {stat.formatter ? stat.formatter(stat.value) : stat.value.toLocaleString()}
+                  </div>
                 )}
                 <p className="text-xs text-muted-foreground mt-1">{stat.description}</p>
               </CardContent>
